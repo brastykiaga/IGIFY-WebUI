@@ -578,7 +578,7 @@ The Service Integration Layer provides:
 
 A new service should be registered and connected through this integration approach rather than requiring a redesign of the WebUI.
 
-The proposed contract for the WebUI-to-backend boundary — endpoints, permission matrix, offline sync and the decisions still required — is in `docs/API-CONTRACT.md`. It is a proposal only; no backend exists for this prototype.
+The proposed contract for the WebUI-to-backend boundary — endpoints, permission matrix, offline sync and the decisions still required — is in `docs/API-CONTRACT.md`. The implementation plan for that backend, including container topology, data model, integration layer and phase gates, is in `docs/BACKEND-PLAN.md`. Both are proposals; no backend exists for this prototype.
 
 ### 11.3 Security
 - Frontend visibility is not authorisation.

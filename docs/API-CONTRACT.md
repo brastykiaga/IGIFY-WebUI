@@ -406,7 +406,57 @@ include the HTTP adapter only when `VITE_API_BASE_URL` is set.
 The HTTP path has been exercised against `scripts/mock-api.mjs`, not against a
 real server, and it has not yet been run in a browser with a live backend.
 
+## 17. Additions implied by the backend architecture diagram
+
+The owner's architecture baseline (`IGIFY_Backend_Architecture.png`, read back in
+`docs/BACKEND-PLAN.md`) introduces Migle & Search, MovieBrain, TV & Radio and
+KADO & Community Apps as independent services behind an Integration Layer. Three
+surfaces are not yet specified above and are added here:
+
+### 17.1 Organisation profile
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/organisations/{id}` | Public organisation profile |
+| `PATCH` | `/organisations/{id}` | Organisation admin maintains permitted fields |
+| `GET` | `/me/organisation` | The caller's organisation, for the Organisation Admin workspace |
+
+Field changes that affect public presentation should enter review rather than
+publish immediately; the prototype currently saves directly and records an audit
+event.
+
+### 17.2 Service registry
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/services` | Registered services with status and health |
+| `GET` | `/services/{id}` | One service, with connector metadata |
+| `POST` | `/services/{id}/enable` | Administrator action, audited |
+| `POST` | `/services/{id}/disable` | Administrator action, audited |
+
+Health is reported by the Integration Layer's monitor, never probed by the
+browser. The prototype stores enable/disable overrides locally; this replaces
+them with the authoritative source.
+
+### 17.3 Search proxy
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/search?q=&type=&limit=` | Ranked results across local content and connected services |
+
+The Core applies access rules and normalises results before returning them, so
+the browser never holds credentials for Migle or any other service. Result shape
+should match what the WebUI already renders: `kind`, `title`, `snippet`,
+`type`/`page`, plus a stable identifier for opening the record.
+
+### 17.4 Audit read side
+
+Already specified in §11 and implemented by the WebUI. The backend must expose
+`GET /audit` and `GET /audit/{id}` with append-only storage; the application role
+must not hold `UPDATE` or `DELETE` on that table.
+
 ---
 
 **End of proposal.** Nothing here is implemented on the server; the prototype
-remains frontend-only with local persistence.
+remains frontend-only with local persistence, and the implementation plan is in
+`docs/BACKEND-PLAN.md`.
