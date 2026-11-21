@@ -1,0 +1,65 @@
+{
+  "news": {
+    "file": "card-news.jpg",
+    "title": "Kundiawa (5987238134).jpg",
+    "creator": "eGuide Travel",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Kundiawa_(5987238134).jpg",
+    "bytes": 128470
+  },
+  "learn": {
+    "file": "card-learn.jpg",
+    "title": "Pacific Partnership 2025 Multinational Band Perform at Lea High School in Lae, Papua New Guinea, July 2025 (9234602).jpg",
+    "creator": "U.S. Navy photo by Petty Officer 3rd Class Adriana Immormino",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Pacific_Partnership_2025_Multinational_Band_Perform_at_Lea_High_School_in_Lae,_Papua_New_Guinea,_July_2025_(9234602).jpg",
+    "bytes": 75970
+  },
+  "discover": {
+    "file": "card-discover.jpg",
+    "title": "Papua New Guinea (5986602743).jpg",
+    "creator": "eGuide Travel",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Papua_New_Guinea_(5986602743).jpg",
+    "bytes": 109462
+  },
+  "community": {
+    "file": "card-community.jpg",
+    "title": "Goroka Show - Lastra.jpg",
+    "creator": "Anselmo Lastra",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Goroka_Show_-_Lastra.jpg",
+    "bytes": 105763
+  },
+  "faith": {
+    "file": "card-faith.jpg",
+    "title": "Reformed Ministries Church,Maingaip,Kandep District.jpg",
+    "creator": "Nicxon.Piaso",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Reformed_Ministries_Church,Maingaip,Kandep_District.jpg",
+    "bytes": 136840
+  },
+  "farming": {
+    "file": "card-farming.jpg",
+    "title": "Hut with vegetable garden (48889647148).jpg",
+    "creator": "gailhampshire from Cradley, Malvern, U.K",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hut_with_vegetable_garden_(48889647148).jpg",
+    "bytes": 139385
+  },
+  "media": {
+    "file": "card-media.jpg",
+    "title": "Student Warrior Dancer from Papua New Guinea.jpg",
+    "creator": "Kizomo",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Student_Warrior_Dancer_from_Papua_New_Guinea.jpg",
+    "bytes": 104722
+  }
+}

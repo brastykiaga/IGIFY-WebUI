@@ -1,4 +1,5 @@
 import './style.css'
+import photoCredits from '../docs/photo-credits.json'
 
 // ── Configuration ─────────────────────────────────────────────────────────
 
@@ -1075,6 +1076,23 @@ function createFormModal() {
   return modalShell(t.label, body, foot)
 }
 
+function creditsModal() {
+  const items = Object.entries(photoCredits)
+    .map(([module, c]) => {
+      const source = c.source
+        ? ` · <a href="${escapeHtml(c.source)}" target="_blank" rel="noopener noreferrer">source</a>`
+        : ''
+      return `<li>
+        <strong>${escapeHtml(module)}</strong>
+        <p>${escapeHtml(c.title || '')}</p>
+        <small>${escapeHtml(c.creator || 'Unknown')} · ${escapeHtml(c.license || '')}${source}</small>
+      </li>`
+    })
+    .join('')
+  const body = `<p class="muted">Photographs are used under their stated licences. The CC BY and CC BY-SA images require attribution, which this panel provides.</p><ul class="notif-list credits-list">${items}</ul>`
+  return modalShell('Photo credits', body)
+}
+
 function closeModal() {
   state.modal = null
   state.createType = null
@@ -1211,8 +1229,9 @@ function render() {
           </div>
           ${contentFor(state.env, state.page)}
           <footer>
-            IGIFY WebUI Prototype v1.0
+            IGIFY WebUI Prototype v1.1
             <span>Frontend demonstration · Not connected to production services</span>
+            <button class="link-btn" data-action="credits">Photo credits</button>
           </footer>
         </div>
       </main>
@@ -1220,6 +1239,7 @@ function render() {
       ${state.modal === 'notifications' ? notificationsModal() : ''}
       ${state.modal === 'create' ? createModal() : ''}
       ${state.modal === 'create-form' ? createFormModal() : ''}
+      ${state.modal === 'credits' ? creditsModal() : ''}
       <div class="toast ${state.toast ? 'show' : ''}" role="status" aria-live="polite">${escapeHtml(state.toast)}</div>
     </div>
   `
@@ -1320,6 +1340,9 @@ function render() {
         render()
       } else if (a === 'submit-create') {
         submitCreate()
+      } else if (a === 'credits') {
+        state.modal = 'credits'
+        render()
       } else {
         notify('Prototype placeholder — this action will connect to the IGIFY backend in a later implementation.')
       }

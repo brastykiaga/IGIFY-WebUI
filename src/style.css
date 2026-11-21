@@ -285,6 +285,23 @@ footer {
   text-align: center;
 }
 footer span { display: block; margin-top: 4px; font-size: 10px; }
+.link-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-btn:hover { color: var(--text); }
+
+/* Photo credits */
+.credits-list li { display: block; }
+.credits-list li p { margin: 2px 0 4px; }
+.credits-list li small a { color: var(--accent); }
 
 /* ── Notifications badge ─────────────────────────────────────────────── */
 .bell { position: relative; }

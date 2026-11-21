@@ -8,7 +8,7 @@ A frontend-only demonstration of the four IGIFY user environments — offline-fi
 - **Mobile-first responsive:** Designed for small screens first, scales up to desktop
 - **Visible theme controls:** 5 charcoal light themes + Dark Mode (keyboard shortcuts Alt+T / Alt+D still work)
 - **Organisation Admin theme:** one fixed cool-charcoal theme, independent of the light theme allocation and Dark Mode
-- **Photographic content cards:** news, learning, media and community cards carry 16:9 photographs bundled for offline use; administrative cards stay text-only. Sample images are generic and should be replaced with IGIFY's own photography (see `docs/SAMPLE-IMAGES.md`)
+- **Photographic content cards:** news, learning, media and community cards carry real Papua New Guinea photographs (Wikimedia Commons, credited in-app under *Photo credits*); administrative cards stay text-only. Replace with IGIFY's own photography when available (see `docs/SAMPLE-IMAGES.md`)
 - **Member public news:** public news and announcements remain visible in the member workspace
 - **localStorage persistence:** Remembers theme, dark mode, sidebar state, and workspace across visits
 - **Offline/online status banner:** Shows when the device is offline
