@@ -127,6 +127,7 @@ included as a visual prototype. Organisation Admin uses its own fixed theme.
 ## Documentation
 
 - `IGIFY-WEBUI-PROTOTYPE-DESIGN.md` — consolidated design baseline and status.
+- `docs/PAGE-INVENTORY.md` — page-by-page inventory, counts and missing detail screens.
 - `docs/API-CONTRACT.md` — proposed backend boundary, offline model, Docker shape.
 - `docs/SAMPLE-IMAGES.md` — photography provenance and replacement steps.
 - `ARCHITECTURE.html` — layered platform diagram.
