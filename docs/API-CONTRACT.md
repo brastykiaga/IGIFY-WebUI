@@ -299,15 +299,19 @@ reads them; it must not be able to edit them.
 
 ## 13. Decisions required before implementation
 
+**Status:** the project owner accepted the proposed defaults on 2026-11-21 for
+decisions 2–5. Decisions 1 and 7 remain open and block backend work only, not
+frontend work.
+
 | # | Decision | Why it matters |
 | --- | --- | --- |
-| 1 | What stack runs the existing Kundiawa deployment (language, framework, database)? | Determines whether this upgrade extends or replaces it |
-| 2 | Reuse existing accounts/KYC, or introduce new identity? | A second identity system would fragment the community |
-| 3 | Session cookie or bearer token? | Affects PWA behaviour and CSRF handling |
-| 4 | Offline scope: read-only caching, or queued writes too? | Queued writes roughly double backend work but match the deployment |
-| 5 | Who may author content (KYC members? organisations only?) | Shapes the permission matrix and the member workspace |
-| 6 | Retention periods for notifications and audit records | Compliance and storage sizing |
-| 7 | Media storage: on the provincial server, or central? | Offline availability and bandwidth |
+| 1 | What stack runs the existing Kundiawa deployment (language, framework, database)? | Determines whether this upgrade extends or replaces it — **OPEN** |
+| 2 | Reuse existing accounts/KYC, or introduce new identity? | A second identity system would fragment the community — **default: reuse** |
+| 3 | Session cookie or bearer token? | Affects PWA behaviour and CSRF handling — **default: bearer + refresh** |
+| 4 | Offline scope: read-only caching, or queued writes too? | Queued writes roughly double backend work but match the deployment — **default: queued writes** |
+| 5 | Who may author content (KYC members? organisations only?) | Shapes the permission matrix and the member workspace — **default: organisations author; members read and save** |
+| 6 | Retention periods for notifications and audit records | Compliance and storage sizing — **proposed: 90 days notifications, audit retained** |
+| 7 | Media storage: on the provincial server, or central? | Offline availability and bandwidth — **OPEN** |
 
 ## 14. Suggested first implementation slice
 

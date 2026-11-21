@@ -650,7 +650,10 @@ IGIFY-WebUI/
 │   └── images/
 └── src/
     ├── main.js
-    └── style.css
+    ├── style.css
+    └── data/
+        ├── index.js
+        └── local.js
 ```
 
 `public/` is copied verbatim into `dist/`: it holds the manifest, the service worker, the generated PWA icons and the card photographs. `scripts/` and `docs/` are development aids and are not deployed.
@@ -663,7 +666,7 @@ The build creates a generated `dist/` directory, and dependencies are installed 
 - CSS.
 - Static frontend output for NGINX deployment.
 - Progressive Web App: a service worker (`public/sw.js`) provides an offline app shell, and `public/manifest.json` describes the installable application.
-- `localStorage` persistence for prototype preferences and locally created records.
+- `localStorage` persistence for prototype preferences and locally created records, reached only through the data layer in `src/data/`. Screens never touch storage directly, so a backend adapter can replace it without changing UI code.
 
 `public/` holds files that must be served verbatim from the site root — Vite copies them into `dist/` without hashing or rewriting. The service worker and manifest must stay there; placing them in the repository root instead makes them build assets with unstable paths.
 

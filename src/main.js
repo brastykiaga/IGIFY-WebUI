@@ -1,28 +1,8 @@
 import './style.css'
 import photoCredits from '../docs/photo-credits.json'
+import { store } from './data/index.js'
 
 // ── Configuration ─────────────────────────────────────────────────────────
-
-const STORAGE_KEY = 'igify-webui-v1'
-
-const defaultState = {
-  env: 'public',
-  page: 'Home',
-  theme: 'classic',
-  dark: false,
-  sidebar: false,
-  collapsed: false,
-  search: '',
-  toast: '',
-  offline: false,
-  // Transient UI state (never persisted)
-  modal: null, // null | 'profile' | 'notifications' | 'create' | 'create-form'
-  createType: null, // key of CREATE_TYPES while the create form is open
-  // Persisted prototype data
-  profile: { name: 'Guest user', role: 'Registered member', kyc: 'KYC pending' },
-  notifications: [],
-  items: { users: [], organisations: [], content: [], announcements: [], groups: [], events: [] },
-}
 
 const themeNames = {
   deep: 'Deep Charcoal',
@@ -59,35 +39,31 @@ const environments = {
   },
 }
 
-// ── State with localStorage persistence ───────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────
+// Interface preferences and domain data both come from the store. Only
+// transient view state lives purely in memory.
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      return { ...defaultState, ...parsed }
-    }
-  } catch (e) { /* ignore */ }
-  return { ...defaultState }
+const state = {
+  ...store.getPreferences(),
+  search: '',
+  toast: '',
+  offline: false,
+  modal: null, // null | 'profile' | 'notifications' | 'create' | 'create-form' | 'credits'
+  createType: null, // key of CREATE_TYPES while the create form is open
+  profile: store.getProfile(),
+  notifications: store.listNotifications(),
+  items: store.allRecords(),
 }
 
 function saveState() {
-  try {
-    const { toast, search, offline, modal, createType, ...persist } = state
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persist))
-  } catch (e) { /* ignore */ }
-}
-
-const state = loadState()
-
-// First run: seed a couple of demonstration notifications so the inbox is not empty.
-if (!Array.isArray(state.notifications) || state.notifications.length === 0) {
-  state.notifications = [
-    { id: 1, title: 'Welcome to IGIFY', body: 'Notifications are stored on this device in the prototype.', at: Date.now(), read: false },
-    { id: 2, title: 'Offline-first enabled', body: 'The app shell is cached and works without an internet connection.', at: Date.now(), read: false },
-  ]
-  saveState()
+  store.setPreferences({
+    env: state.env,
+    page: state.page,
+    theme: state.theme,
+    dark: state.dark,
+    sidebar: state.sidebar,
+    collapsed: state.collapsed,
+  })
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────
@@ -968,8 +944,7 @@ function unreadCount() {
 }
 
 function addNotification(title, body) {
-  state.notifications.unshift({ id: Date.now() + Math.random(), title, body, at: Date.now(), read: false })
-  if (state.notifications.length > 20) state.notifications.length = 20
+  state.notifications = store.addNotification({ title, body })
 }
 
 function formatTime(ts) {
@@ -1107,9 +1082,8 @@ function saveProfile() {
     input?.focus()
     return
   }
-  state.profile.name = name
+  state.profile = store.updateProfile({ name })
   state.modal = null
-  saveState()
   render()
   notify('Profile saved on this device.')
 }
@@ -1126,8 +1100,8 @@ function submitCreate() {
     return
   }
   const detail = (detailEl?.value || '').trim()
-  if (!state.items[t.collection]) state.items[t.collection] = []
-  state.items[t.collection].unshift({ title, detail, status: t.status, at: Date.now() })
+  store.createRecord(t.collection, { title, detail, status: t.status })
+  state.items = store.allRecords()
   addNotification(`${t.label} saved`, `${title} — ${t.status.toLowerCase()}.`)
 
   // Stay inside the Organisation Admin workspace for its own content and events.
@@ -1321,13 +1295,11 @@ function render() {
       } else if (a === 'save-profile') {
         saveProfile()
       } else if (a === 'mark-all-read') {
-        state.notifications = state.notifications.map((n) => ({ ...n, read: true }))
-        saveState()
+        state.notifications = store.markAllRead()
         render()
         notify('All notifications marked as read.')
       } else if (a === 'clear-notifications') {
-        state.notifications = []
-        saveState()
+        state.notifications = store.clearNotifications()
         render()
         notify('Notifications cleared.')
       } else if (a === 'choose-create') {
