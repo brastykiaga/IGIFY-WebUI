@@ -27,6 +27,9 @@ mobile-first, lightweight and fast.
   member workspace.
 - **Collapsible sidebar:** an icon rail on desktop with hover/focus labels; an
   overlay drawer with backdrop on small screens. The choice is remembered.
+- **Search results:** the header field now returns ranked results across content and
+  workspace pages, at a shareable address (`#/public/Search?q=coffee`). Local
+  index only — not yet connected to Migle.
 - **Routing and detail screens:** every screen has a shareable hash URL, and one
   reusable detail layout serves news, learning, event, group, organisation and
   media records. Browser back/forward works.
@@ -101,6 +104,7 @@ shape are specified in `docs/API-CONTRACT.md`.
 node scripts/mock-api.mjs 8099         # in-memory mock of the API contract
 node scripts/test-http-store.mjs       # adapter + outbox checks against the mock
 node scripts/test-router.mjs           # route parsing and rejection checks
+node scripts/test-search.mjs           # search relevance and edge cases
 node scripts/fetch-png-photos.mjs      # search Commons for card photography
 python scripts/build-contact-sheet.py  # labelled review sheet of candidates
 python scripts/adopt-photos.py         # crop and resize chosen photos

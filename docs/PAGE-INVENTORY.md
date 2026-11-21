@@ -30,6 +30,7 @@ L3 screen**. That is the gap being measured here.
 | Content blocks rendered | ≈126 |
 | Detail screens described (L3) | **0** — the baseline never specifies them |
 | Detail screens implemented | **1 reusable pattern**, 6 record types, 9 sample records |
+| Search results screen | **Built** — searches records and workspace pages |
 | Detail screens needed to make L2 blocks work | **14** (listed in §6) |
 | Card buttons wired to a destination | **28 of 126** (22%) |
 | Controls that currently lead nowhere | **110** (98 card buttons + 5 section links + 7 panel buttons) |
@@ -131,7 +132,7 @@ derived from the L2 blocks the document does specify.
 | 5 | Event detail | Upcoming, learning and faith events | **Built** (pattern + 1 record) |
 | 6 | Public group detail | Public group information, My Groups | **Built** (pattern + 1 record) |
 | 7 | Organisation public profile | Organisation updates, notices | **Built** (pattern + 1 record) |
-| 8 | Search results | Search IGIFY field | Not built |
+| 8 | Search results | Search IGIFY field | **Built** (local content; not connected to Migle) |
 | 9 | Notification archive | "View all" in the inbox | Not built |
 | 10 | Draft / content record with approval | Content & Editorial, Organisation Content | Not built |
 | 11 | User record | Users & Identity | Not built |
@@ -139,9 +140,9 @@ derived from the L2 blocks the document does specify.
 | 13 | Audit event | Audit & Activity | Not built |
 | 14 | Service / module record | Modules & Services | Not built |
 
-Six of the fourteen now have a working detail screen through one shared layout.
-The remaining eight are the ones that need decisions (search behaviour,
-approval actions, record fields) rather than just markup.
+Seven of the fourteen now have a working screen: six record types through one
+shared layout, plus search results. The remaining seven need decisions (approval
+actions, record fields, retention) rather than just markup.
 
 Two further screens are implied but arguably belong to L1:
 
@@ -170,8 +171,10 @@ These decisions are needed before the missing screens can be built consistently:
    is implemented (`src/router.js`), validated against the known workspaces and
    pages, and covered by `scripts/test-router.mjs`. Detail routes carry a record
    type and id.
-2. **Search results screen.** "Unified Search IGIFY" is described, but no screen
-   or result layout is defined — still open.
+2. **Search results screen.** ~~No screen or result layout is defined.~~
+   **Resolved:** `#/{workspace}/Search?q=...` renders ranked results from the
+   demonstration catalogue and the workspace pages. Connecting Migle remains
+   open.
 3. **Draft/approval screen.** The status machine is defined in the API contract,
    but not the reviewer's screen — still open.
 4. **Notification archive.** The inbox is described; browsing history is not —
@@ -199,8 +202,8 @@ These decisions are needed before the missing screens can be built consistently:
 ## 11. Summary answer
 
 - **Workspace pages:** 30 planned, 30 exist. Nothing missing at this level.
-- **Detail screens:** 6 of the 14 needed now work through one shared pattern;
-  **8 remain**, none of which the plan specifies.
+- **Detail screens:** 7 of the 14 needed now work (six through one shared record
+  pattern, plus search); **7 remain**, none of which the plan specifies.
 - **Card buttons wired:** 28 of 126 (22%).
 - **Controls needing a destination:** **110**.
 - The prototype now has a *corridor* through it — routing, back navigation and a

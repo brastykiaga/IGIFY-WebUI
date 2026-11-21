@@ -4,6 +4,7 @@ import { store } from './data/index.js'
 import { CARD_LINKS, findRecord, TYPE_LABELS } from './content/catalogue.js'
 import { iconSvg, NAV_ICONS } from './icons.js'
 import { parseRoute, routeHash } from './router.js'
+import { searchAll, TYPE_PAGE } from './search.js'
 
 // ── Configuration ─────────────────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ if (initialRoute) {
   state.env = initialRoute.env
   state.page = initialRoute.page
   state.detail = initialRoute.detail
+  state.search = initialRoute.search || ''
 } else {
   // Give the first screen an address without triggering a second render.
   try {
@@ -79,6 +81,7 @@ function applyRoute(route) {
   state.env = route.env
   state.page = route.page
   state.detail = route.detail || null
+  state.search = route.search || ''
   saveState()
   render()
 }
@@ -1261,6 +1264,48 @@ function submitCreate() {
 
 // ── Render ────────────────────────────────────────────────────────────────
 
+/** Search results screen. */
+function searchPage(query) {
+  const q = String(query || '').trim()
+
+  if (!q) {
+    return `<section class="panel">
+      <div class="panel-head"><h2>Search IGIFY</h2></div>
+      <p class="muted">Type a term in the field above — for example “coffee”, “school”, “church” or “event”.</p>
+      <p class="muted">Search covers the demonstration content and the workspace pages. It is not yet connected to Migle.</p>
+    </section>`
+  }
+
+  const results = searchAll(q, environments)
+
+  if (!results.length) {
+    return `<section class="panel">
+      <div class="panel-head"><h2>No results</h2></div>
+      <p class="muted">Nothing matches “${escapeHtml(q)}”. Try a broader term.</p>
+    </section>`
+  }
+
+  const rows = results
+    .map(
+      (r) => `<li class="result">
+        <span class="result-badge">${escapeHtml(r.typeLabel)}</span>
+        <button class="result-title" data-action="open-result"
+          data-kind="${escapeHtml(r.kind)}"
+          data-type="${escapeHtml(r.type || '')}"
+          data-id="${escapeHtml(r.id || '')}"
+          data-env="${escapeHtml(r.env || '')}"
+          data-page="${escapeHtml(r.page || '')}">${escapeHtml(r.title)}</button>
+        <p class="result-snippet">${escapeHtml(r.snippet)}</p>
+      </li>`
+    )
+    .join('')
+
+  return `<section class="panel">
+    <div class="panel-head"><h2>${results.length} result${results.length === 1 ? '' : 's'}</h2><span class="muted">for “${escapeHtml(q)}”</span></div>
+    <ul class="search-results">${rows}</ul>
+  </section>`
+}
+
 /** One reusable detail layout for every record type. */
 function detailView(item, page) {
   const meta = (item.meta || [])
@@ -1292,6 +1337,25 @@ function render() {
   // A stale or hand-edited detail route should fall back to the page, not blank.
   const record = state.detail ? findRecord(state.detail.type, state.detail.id) : null
   if (state.detail && !record) state.detail = null
+
+  const isSearch = !record && state.page === 'Search'
+  const heading = record
+    ? {
+        eyebrow: TYPE_LABELS[record.type] || 'RECORD',
+        title: record.title,
+        subtitle: record.summary || '',
+      }
+    : isSearch
+      ? {
+          eyebrow: 'SEARCH IGIFY',
+          title: 'Search',
+          subtitle: state.search ? `Results for “${state.search}”` : 'Search pages and content.',
+        }
+      : {
+          eyebrow: e.label.toUpperCase(),
+          title: state.page === 'Home' ? e.title : state.page,
+          subtitle: e.subtitle,
+        }
 
   // Organisation Admin has its own fixed theme, unaffected by light allocation or Dark Mode.
   document.documentElement.dataset.theme = state.env === 'org' ? 'org' : state.dark ? 'dark' : state.theme
@@ -1353,7 +1417,7 @@ function render() {
           <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}${record ? ` <span>/</span> ${escapeHtml(record.title)}` : ''}</div>
           <div class="top-actions">
             <div class="search" role="search" aria-label="Search IGIFY">
-              <span>⌕</span>
+              ${iconSvg('search', 16)}
               <input id="search" placeholder="Search IGIFY" value="${escapeHtml(state.search)}" />
             </div>
             <button class="icon-btn bell" data-action="notifications" title="Notifications" aria-label="Notifications${unreadCount() ? ` (${unreadCount()} unread)` : ''}">${iconSvg('bell', 18)}${unreadCount() ? `<span class="badge">${unreadCount()}</span>` : ''}</button>
@@ -1364,17 +1428,13 @@ function render() {
         <div class="page-wrap">
           <div class="page-heading">
             <div>
-              ${record
-                ? `<div class="eyebrow">${escapeHtml(TYPE_LABELS[record.type] || 'RECORD')}</div>
-                   <h1>${escapeHtml(record.title)}</h1>
-                   <p>${escapeHtml(record.summary || '')}</p>`
-                : `<div class="eyebrow">${escapeHtml(e.label).toUpperCase()}</div>
-                   <h1>${state.page === 'Home' ? e.title : escapeHtml(state.page)}</h1>
-                   <p>${escapeHtml(e.subtitle)}</p>`}
+              <div class="eyebrow">${escapeHtml(heading.eyebrow)}</div>
+              <h1>${escapeHtml(heading.title)}</h1>
+              <p>${escapeHtml(heading.subtitle)}</p>
             </div>
-            ${state.env === 'admin' && !record ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
+            ${state.env === 'admin' && !record && !isSearch ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
           </div>
-          ${record ? detailView(record, state.page) : contentFor(state.env, state.page)}
+          ${record ? detailView(record, state.page) : isSearch ? searchPage(state.search) : contentFor(state.env, state.page)}
           <footer>
             IGIFY WebUI Prototype v1.1
             <span>Frontend demonstration · Not connected to production services</span>
@@ -1443,6 +1503,15 @@ function render() {
         })
       } else if (a === 'detail-back') {
         go({ env: state.env, page: state.page, detail: null })
+      } else if (a === 'open-result') {
+        if (b.dataset.kind === 'page') {
+          go({ env: b.dataset.env, page: b.dataset.page })
+        } else {
+          const type = b.dataset.type
+          const targetPage = TYPE_PAGE[type] || 'Home'
+          const env = environments[state.env].nav.includes(targetPage) ? state.env : 'public'
+          go({ env, page: targetPage, detail: { type, id: b.dataset.id } })
+        }
       } else if (a === 'profile') {
         state.modal = 'profile'
         render()
@@ -1509,9 +1578,10 @@ function render() {
     state.search = ev.target.value
   })
   search.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') {
-      notify(state.search ? `Demo search for “${escapeHtml(state.search)}” — search service not connected.` : 'Enter a search term.')
-    }
+    if (ev.key !== 'Enter') return
+    const value = ev.target.value.trim()
+    if (!value) return
+    go({ env: state.env, page: 'Search', search: value })
   })
 
   // Appearance page theme control (Administrator → Appearance & Interface)
