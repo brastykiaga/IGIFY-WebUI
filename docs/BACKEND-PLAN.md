@@ -207,6 +207,12 @@ Genuinely missing information. Each states how it can be resolved.
 
 **No code. No stack choice. No migration plan.** This phase produces the evidence.
 
+The working kit for this phase is in **`docs/INVENTORY.md`**: fillable templates
+for D1–D7, read-only collector scripts for Linux and Windows Docker hosts
+(`scripts/discovery/`), read-only database queries for size and row estimates,
+a redaction checklist, and the mapping from each deliverable to the open
+questions above.
+
 | Deliverable | Contents | Method |
 | --- | --- | --- |
 | **D1 Host & container inventory** | Every host, container, image tag, port, volume, compose project at Kundiawa | Read-only commands run on the host by your team; output shared |
