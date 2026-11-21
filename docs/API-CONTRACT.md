@@ -5,9 +5,15 @@
 **Audience:** IGIFY Limited, Simbu provincial deployment, future implementers
 
 > This document describes what the frontend needs from a backend, derived from
-> the flows already implemented in the prototype. It is a proposal. Items marked
-> **CONFIRM** depend on decisions only the project owner can make, and on the
-> stack already running the Kundiawa deployment.
+> the flows already implemented in the prototype.
+>
+> **Classification:** this is a **RECOMMENDATION** for review, not an approved
+> design. It is deliberately technology-neutral: no language, framework,
+> database or deployment shape is assumed here. Where it touches the existing
+> platform it says so, and it defers to
+> `docs/BACKEND-PLAN.md` for the review process. Items marked **CONFIRM** depend
+> on information that is genuinely unknown, including what already runs at the
+> Kundiawa deployment.
 
 ---
 
@@ -90,9 +96,11 @@ Requirements the frontend places on auth:
 }
 ```
 
-**Recommendation:** if the deployment is browser-only PWA plus future mobile
-apps, prefer short-lived bearer access tokens with refresh, over cookie sessions.
-Cookies need CSRF handling and behave poorly in installed PWAs across origins.
+**RECOMMENDATION (not approved):** if the deployment is a browser-only PWA with
+future mobile apps, short-lived access tokens with refresh may suit better than
+cookie sessions, which need CSRF handling and behave poorly in installed PWAs
+across origins. This is subject to the existing platform's identity approach,
+which is unknown until the inventory in `docs/BACKEND-PLAN.md` §8 is complete.
 
 ## 4. Profile
 
@@ -334,7 +342,8 @@ is a set of independent containers. This upgrade should add containers rather
 than introduce a new hosting model.
 
 ```yaml
-# Illustrative addition to the existing compose project
+# Illustrative only. The database image shown is a placeholder: the engine is
+# not decided, and reuse of whatever already runs at Kundiawa is preferred.
 services:
   api:
     image: igify/api:1

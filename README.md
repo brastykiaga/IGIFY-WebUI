@@ -166,8 +166,9 @@ included as a visual prototype. Organisation Admin uses its own fixed theme.
 - `IGIFY-WEBUI-PROTOTYPE-DESIGN.md` — consolidated design baseline and status.
 - `docs/PAGE-INVENTORY.md` — page-by-page inventory, counts and missing detail screens.
 - `docs/API-CONTRACT.md` — proposed backend boundary, offline model, Docker shape.
-- `docs/BACKEND-PLAN.md` — backend implementation plan: stack options, container
-  topology, data model, integration layer, phases and open decisions.
+- `docs/BACKEND-PLAN.md` — backend review and implementation plan (v0.2):
+  agreed architecture, corrections to earlier proposals, discovery phase,
+  classification of decisions, and the information still missing.
 - `docs/SAMPLE-IMAGES.md` — photography provenance and replacement steps.
 - `ARCHITECTURE.html` — layered platform diagram.
 

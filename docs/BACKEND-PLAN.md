@@ -1,278 +1,273 @@
-# IGIFY Backend — Implementation Plan
+# IGIFY Backend — Consolidated Implementation Plan
 
-**Status:** Draft 0.1 — proposal for review
-**Source:** `IGIFY_Backend_Architecture.png` (owner's architecture baseline)
-**Companions:** `docs/API-CONTRACT.md` (frontend boundary), `IGIFY-WEBUI-PROTOTYPE-DESIGN.md`
+**Version:** 0.2 (supersedes 0.1; 0.1 remains in git history)
+**Status:** Review document. **No implementation is approved or started.**
+**Owner of direction:** IGIFY Limited. This document works within that direction.
+**Companions:** `IGIFY-WEBUI-PROTOTYPE-DESIGN.md`, `docs/API-CONTRACT.md`, `docs/PAGE-INVENTORY.md`
+
+> **How to read this document.** Every architectural statement is classified:
+> **AGREED** (established by the project — not for re-litigation),
+> **RECOMMENDATION** (proposal requiring your approval), or
+> **OPEN QUESTION** (information genuinely missing).
+> Nothing here overrides an agreed decision.
 
 ---
 
-## 1. What the architecture diagram commits to
+## 1. Purpose
 
-Read back from the diagram, so we agree on the same baseline before planning against it:
+Turn the established IGIFY architecture into a working, maintainable platform by:
 
-| Layer | Components named in the diagram |
+1. reviewing what exists before proposing what to build;
+2. mapping the WebUI's requirements onto the agreed architecture;
+3. separating what is decided from what is proposed and what is unknown;
+4. defining a discovery phase that produces the evidence needed to choose technology honestly.
+
+## 2. Review scope and inputs
+
+### 2.1 What was reviewed
+
+| Input | Findings used |
 | --- | --- |
-| Frontends | Public WebUI, Registered Member WebUI, Organisation Admin, IGIFY Administrator |
-| **Core** | Authentication · Sessions · Identity · Security groups · Authorisation · Organisations · Business rules · Notifications |
-| **Integration layer** | Service registry · Connector manager · API adapters · Access gateway · Health monitoring · Events · Offline coordination |
-| Independent services | Migle & Search · MusicBrainz & MovieBrain · TV & Radio · KADO & Community Apps |
-| Data | Core identity data · Independent application data · Shared content & media · Search indexes · Integration & sync records · Audit · Backup & recovery |
-| Deployment | Docker containers · Persistent volumes · Independent service lifecycle · Offline-capable provincial installation |
+| `IGIFY-WEBUI-PROTOTYPE-DESIGN.md` | Four workspaces, shared shell, service catalogue, security principles, deployment principles |
+| `docs/API-CONTRACT.md` | The boundary the current WebUI already calls |
+| `docs/PAGE-INVENTORY.md` | 30 workspace pages, 14 detail screens, what the interface actually needs |
+| `ARCHITECTURE.html` | Prior layered summary of the same architecture |
+| `src/**` (12 modules) | Data-layer seam, workflow rules, routing, search, services catalogue |
+| Repository inventory | Frontend only: `public/` 20 files, `src/` 12, `scripts/` 12 (image/icon tooling), `docs/` 5 |
+| `package.json` | Scripts: `dev`, `build`, `preview` — no server component |
 
-Two properties of this diagram drive the whole plan:
+### 2.2 What is not available to me — **UNKNOWN**
 
-1. **The Core is a single application boundary.** One API owns identity, authorisation, organisations, business rules and notifications; services sit *behind* it and never talk to the browser directly.
-2. **Services are independent and replaceable.** Adding a service must not mean redesigning the Core or the WebUI.
+These are not assumptions I am permitted to fill in:
 
-## 2. Decisions still open
+- the existing platform's source code, language, framework and database;
+- the existing service APIs, their authentication and their data models;
+- what is actually deployed at Kundiawa today, and its versions;
+- the existing offline content acquisition framework and what it produces;
+- provincial hardware specifications and expected content volumes;
+- long-term maintenance arrangements and available skills;
+- provincial IT policy on secrets, backups and data retention.
 
-The diagram fixes structure but not technology. These must be decided before code:
+**Consequence:** no stack selection, no container topology, no migration strategy and no schema can be responsibly proposed until §8 is complete.
 
-| # | Decision | Why it blocks work | Recommended default |
+## 3. Established architecture — AGREED
+
+Restated only to confirm a shared baseline, not to re-open it.
+
+| # | Agreed |
+| --- | --- |
+| A1 | IGIFY is an existing platform being extended, not a greenfield build. |
+| A2 | A central **IGIFY Core** owns platform-wide identity, authentication, authorisation, organisations, memberships, platform configuration and comparable central responsibilities. |
+| A3 | An independent **Service Integration Layer** provides service registration, connectors, adapters, access control, health monitoring, events, offline coordination and external integration. |
+| A4 | Independent applications retain ownership of their application-specific business logic and data. |
+| A5 | Data ownership and storage boundaries are explicit. |
+| A6 | Docker for backend services; **Compose** is the initial deployment approach. |
+| A7 | Persistent storage independent of disposable containers. |
+| A8 | Offline-first operation is a requirement, not a feature. |
+| A9 | Independent service upgrades must not require redesign of the Core or the frontend. |
+| A10 | Deployment must be repeatable and manageable for provincial installations: build once, package once, deploy consistently. |
+| A11 | No Kubernetes, Swarm or comparable infrastructure without a demonstrated operational justification. |
+| A12 | The existing offline content acquisition framework is preserved and integrated, not redesigned. |
+| A13 | The browser must not hold credentials for protected backend services; access is mediated by backend security and integration mechanisms. |
+| A14 | The diagram's boxes are **logical responsibilities**; they do not each imply a separate container or microservice. |
+| A15 | Architectural items are classified as agreed / recommendation / open question. |
+
+## 4. Findings from the review
+
+### 4.1 The repository does not contain the platform
+
+This repository is the **WebUI prototype only**. There is no server code, schema, migration, or deployment configuration for the existing Kundiawa platform. Any statement about the existing backend's technology would therefore be invention.
+
+### 4.2 What the WebUI already aligns with
+
+The frontend prototype is consistent with the agreed architecture and can be treated as a validated requirements source:
+
+- **Backend-authoritative security.** The interface states repeatedly that visibility is not authorisation; the contract requires server-side checks on every protected operation.
+- **Status transitions as actions, not field writes.** `src/content/workflow.js` refuses illegal transitions in the data layer, not just in the UI.
+- **Offline-first write model.** Outbox with `clientId` replay and exponential backoff already exists and is tested against a mock.
+- **Integration-ready boundary.** The WebUI consumes a single API; it has no knowledge of individual services, which matches A13.
+- **Service catalogue as configuration.** The Modules & Services screen expects the registry to be authoritative, not local overrides.
+- **Audit as a first-class read surface.** Every mutation in the prototype writes an audit event.
+
+These are requirements the backend must satisfy; they are not architectural proposals.
+
+### 4.3 Corrections to plan v0.1
+
+| v0.1 statement | Status | Correction |
+| --- | --- | --- |
+| "Start with two/three containers; extract the Integration Layer later" | **Withdrawn as a decision** | A14 and A9 govern. Boundary design is agreed; deployment granularity is decided per component against explicit criteria (§5.2). |
+| "Laravel or NestJS; choose by existing maintainer's language" | **Withdrawn** | Premature. Technology selection follows code review and evidence (§8, D5). PHP is not assumed. |
+| "PostgreSQL 16" as default | **Downgraded to RECOMMENDATION** | A candidate to evaluate against the existing database estate, not a decision. |
+| "Migle is the first connector, therefore design around it" | **Corrected** | The Integration Layer must be generic (A3). Migle is one existing example among many services. |
+| "Migration: parallel run, dry-run import, retire after a month" | **Withdrawn** | Migration strategy requires the inventory in §8 first (your §7). |
+| "Phases 1–6 with week estimates" | **Withdrawn** | Scheduled work cannot be estimated before discovery. Replaced by a Phase 0 gate. |
+| "RPO 24 h / RTO 4 h" | **RECOMMENDATION** | Proposed targets for approval, not agreed service levels. |
+| "Audit append-only with hash chain" | **RECOMMENDATION** | Strongly advised, but a proposal. |
+| "Media on local volume first, S3-compatible later" | **RECOMMENDATION** | Depends on provincial hardware and content volume (Q6). |
+| Naming of internal modules (`Identity/`, `Content/`…) | **Illustrative** | Suggested boundaries, not a prescribed structure. |
+
+### 4.4 Assumptions withdrawn
+
+- that the existing platform is PHP-based;
+- that existing identity data is extractable;
+- that a single maintainer will own the Core;
+- that one provincial server is sufficient for the expected media volume;
+- that the existing services expose HTTP APIs the Integration Layer can call directly.
+
+## 5. Boundaries and granularity
+
+### 5.1 Boundary model — AGREED
+
+```
+Frontends  →  IGIFY Core  →  Service Integration Layer  →  Independent applications
+                    ↓                     ↓                          ↓
+              Core-owned data     integration/sync records   application-owned data
+```
+
+Rules that follow from A2–A5 and A13:
+
+1. The Core is the only party the browser talks to.
+2. The Integration Layer mediates every call to an independent application.
+3. An application owns its data; the Core does not reach into it directly.
+4. Adding or upgrading an application changes the Integration Layer's registry/connector, not Core business rules.
+5. Shared artefacts (identity, organisations, audit) are Core-owned; shared media ownership is **not yet decided** (Q7).
+
+### 5.2 Deployment granularity — RECOMMENDATION
+
+Consolidate by default, separate by justification. A logical component becomes its own deployable unit only when at least one criterion is met:
+
+| Criterion | Question |
+| --- | --- |
+| Independent upgrade | Must it be upgraded on a different cadence than the Core? |
+| Security isolation | Does it hold credentials or data the Core must not? |
+| Failure isolation | Can its failure be tolerated while the Core serves? |
+| Resource profile | Does it need materially different CPU/memory/disk? |
+| Maintenance ownership | Is it maintained by a different team or vendor? |
+
+Where none applies, consolidation inside one deployable unit is preferred — this is what keeps A10 achievable without violating A9. **This is a proposal; the criteria are the substance, the resulting split is yours to approve.**
+
+## 6. Mapping the WebUI's needs onto the architecture
+
+| WebUI capability (built) | Architectural owner | Confidence |
+| --- | --- | --- |
+| Session, identity, security groups, authorisation | Core | AGREED (A2) |
+| Profile, notifications | Core | AGREED (A2) |
+| Editorial content, announcements, events, groups; approval workflow | Core (platform-wide business rules) | AGREED in principle; boundary with application content needs confirmation (Q8) |
+| Registration review, KYC state | Core | AGREED (A2) |
+| Organisations, membership, admin appointments | Core | AGREED (A2) |
+| Audit register and event detail | Core | AGREED (A2); retention policy open |
+| Service register, health, enable/disable | Integration Layer | AGREED (A3) |
+| Unified search | Integration Layer → Migle | AGREED (A3); Migle interface unknown (Q9) |
+| Radio/TV playback entry points | Independent services via Integration | AGREED (A4); APIs unknown |
+| Music/TV metadata | Independent services via Integration | AGREED (A4); APIs unknown |
+| Curated offline content | Integration Layer offline coordination + existing acquisition framework | AGREED (A3, A12); framework unknown (Q10) |
+| Card photography and media assets | Not yet decided | OPEN (Q7) |
+
+This table is the bridge between what is built and what must be provided. It is analysis, not design.
+
+## 7. Classification register
+
+### 7.1 Agreed — see §3 (A1–A15)
+
+### 7.2 Recommendations requiring approval
+
+| # | Recommendation | Why | If declined |
 | --- | --- | --- | --- |
-| D1 | Language/framework for the Core | Everything else follows it | See §3 — recommendation depends on your existing stack |
-| D2 | Database engine | Schema, migrations, backup procedure | PostgreSQL 16 |
-| D3 | Auth mechanism | Session handling, PWA behaviour, CSRF | Short-lived access token + refresh token |
-| D4 | Search engine behind Migle | Whether Core proxies or Migle owns the index | Migle owns it; Core proxies |
-| D5 | Media storage | Backup size, offline availability | Local persistent volume first; S3-compatible later |
-| D6 | Orchestration | Deployment procedure | Docker Compose per province |
-| D7 | Existing Kundiawa platform | Migration vs replacement | Reuse identity data if extractable |
-| D8 | Team and maintenance capacity | How much machinery is justified | Modular monolith, not microservices |
+| R1 | Define boundaries first; decide deployable units per component using §5.2 criteria | Preserves independence (A9) without premature microservices | Risk of either monolith lock-in or container sprawl |
+| R2 | Treat `docs/API-CONTRACT.md` as the reviewable boundary specification for the WebUI | It already describes what the frontend calls | Frontend and backend drift |
+| R3 | Core database: evaluate PostgreSQL against the existing estate; relational integrity for identity/approvals/audit | Auditable, transactional | If another engine is already operated, reuse it |
+| R4 | Append-only audit, written in the same transaction as the change it records | Traceability for approvals and admin actions | Audit can diverge from reality |
+| R5 | Generic connector contract (`identify/health/search/fetch/sync`) with per-connector capability flags | Keeps Integration Layer service-agnostic (A3) | Connectors become bespoke per service |
+| R6 | Cursor-based sync with tombstones and `clientId` idempotency | Matches the WebUI's existing outbox and the offline requirement | Duplicate or lost writes on flaky links |
+| R7 | Secrets via environment files (or Docker secrets where the host supports it), never in images | A10 and basic hygiene | Credential leakage in images |
+| R8 | Nightly database dump + media snapshot, with a rehearsed restore | Provincial single-site risk | Unrecoverable data loss |
+| R9 | Health endpoint plus compose healthcheck per service | Required for A10 operability | Silent service failure |
+| R10 | Versioned release bundle (compose + images + env template + release notes) per province | "Build once, deploy consistently" (A10) | Every install becomes bespoke |
 
-## 3. Stack recommendation
+### 7.3 Open questions
 
-The Core should be chosen for **maintainability by a small provincial team**, not for novelty. Three viable options:
+Genuinely missing information. Each states how it can be resolved.
 
-| Option | Strengths here | Costs | Fit |
-| --- | --- | --- | --- |
-| **Laravel (PHP)** | Matches the ecosystem you already run (AzuraCast, FreshRSS, Wallabag are PHP); abundant local PHP skills; mature auth, queues, migrations; simple Docker image | Heavier per-request than Go; PHP-FPM + NGINX | **Best if your existing platform is PHP** |
-| **Node/NestJS (TypeScript)** | Same language as the WebUI; strong typing; good Docker story; shares models with the frontend | Younger ecosystem for admin/KYC; Node runtime discipline needed | Strong if the team is JavaScript-first |
-| **Django (Python)** | Excellent admin out of the box (useful for IGIFY administrators); strong auth and migrations | Python ops knowledge needed; async story weaker | Good if you want the admin for free |
+| # | Question | Resolve by |
+| --- | --- | --- |
+| Q1 | What exactly runs at Kundiawa today: software, versions, containers, hosts? | Host inventory (D1) |
+| Q2 | Is the existing platform's source available for review, and in what language? | Code review (D5) |
+| Q3 | Which existing services expose APIs, with what auth and data ownership? | Service inventory (D2) |
+| Q4 | What data exists, at what volume, sensitivity and growth rate? | Data inventory (D3) |
+| Q5 | What are the provincial hardware specifications (CPU, RAM, disk, network)? | Hardware survey (D4) |
+| Q6 | Expected media volume and change frequency per province? | Owner + D3 |
+| Q7 | Who owns shared media: Core, a media service, or per-application stores? | Boundary workshop (D6) |
+| Q8 | Which content is platform-wide (Core) versus application-owned? | Boundary workshop (D6) |
+| Q9 | What is Migle's interface, deployment model and ownership? | Service inventory (D2) |
+| Q10 | Where does the existing offline acquisition framework live, and what does it produce? | Service inventory (D2) |
+| Q11 | Who maintains the platform after handover, with what skills? | Owner (interview) |
+| Q12 | Provincial policy on secrets, backups, retention and upgrade windows? | Owner / provincial IT |
 
-**Recommendation:** choose whichever language your current maintainer already writes. A platform that a provincial team cannot maintain will decay regardless of architectural elegance. If the existing Kundiawa system is PHP, take **Laravel**; if it is JavaScript, take **NestJS**.
+## 8. Phase 0 — Discovery and inventory
 
-Whichever is chosen, the structure inside the Core is the same (§5).
+**No code. No stack choice. No migration plan.** This phase produces the evidence.
 
-## 4. Deployment topology
+| Deliverable | Contents | Method |
+| --- | --- | --- |
+| **D1 Host & container inventory** | Every host, container, image tag, port, volume, compose project at Kundiawa | Read-only commands run on the host by your team; output shared |
+| **D2 Service inventory** | Per service: purpose, owner, API surface, auth, data store, upgrade model, offline behaviour | Interviews + endpoint discovery |
+| **D3 Data inventory** | Entities, record counts, sizes, growth, sensitivity, retention, backup state | Database inspection by your team |
+| **D4 Infrastructure survey** | Hardware, storage, network, power, backup destination, monitoring | Provincial IT |
+| **D5 Code review report** | Existing frontend/backend: language, frameworks, dependencies, quality, test coverage, risks | Source access required (Q2) |
+| **D6 Boundary workshop** | Confirm content ownership (Q8), shared media (Q7), and the first components that justify separation under §5.2 | Joint session, 1–2 hours |
+| **D7 Constraint & skills register** | Maintenance arrangements, available languages, vendor constraints, budget | Owner interview |
 
-Start with **two containers**, not eight. The Integration Layer begins as a module inside the Core and is extracted only when it earns it.
+### Exit criteria for Phase 0
 
-```yaml
-# Phase 1 topology — illustrative
-services:
-  core:                     # API + business rules + integration module
-    image: igify/core:1
-    restart: unless-stopped
-    env_file: ./core.env
-    depends_on: [db]
-    expose: ["8080"]        # never published to the host; NGINX proxies /api/
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/v1/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    volumes:
-      - media:/srv/media    # uploads and curated media
+1. D1–D4 complete enough to state what exists without guessing.
+2. D5 complete, or explicitly accepted as unavailable with the consequences recorded.
+3. Q7 and Q8 answered in writing.
+4. A short **Decision Record** listing only the choices now unblocked (stack, database, first deployable units), each with evidence.
 
-  worker:                   # queued jobs: sync, imports, notifications, exports
-    image: igify/core:1
-    command: ["worker"]
-    restart: unless-stopped
-    env_file: ./core.env
-    depends_on: [db]
+Only then does implementation planning resume.
 
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    env_file: ./db.env
-    volumes:
-      - db-data:/var/lib/postgresql/data
+## 9. Gates before implementation
 
-  nginx:                    # existing container, gains a proxy location
-    volumes:
-      - media:/srv/media:ro
-    depends_on: [core]
-
-volumes:
-  db-data:
-  media:
-```
-
-Rules that follow from your deployment standard:
-
-- **NGINX remains the only ingress.** `/api/` proxies to `core`; the WebUI stays static files.
-- **Nothing important lives inside a container.** Database and media are named volumes; containers are replaceable.
-- **Configuration by environment file**, never baked into images.
-- **The provincial instance must start and serve with no internet.** External services are optional add-ons, not startup dependencies.
-- **Independent service lifecycle:** a service container can be added, upgraded or stopped without redeploying the Core.
-
-Later phases may add `search` (Meilisearch), `redis` (queues/cache) and one container per integration service — each only when a real need appears.
-
-## 5. Core internals
-
-A modular monolith with boundaries that mirror the diagram, so extraction later is mechanical:
-
-```
-core/
-├── Identity/          users, credentials, KYC state, sessions
-├── Authorisation/     security groups, permissions, policy checks
-├── Organisations/     org records, membership, admin appointments
-├── Content/           content, announcements, events, groups; status machine
-├── Notifications/     per-user notifications, delivery
-├── Audit/             append-only event log
-├── Integration/       registry, connectors, health, events, sync coordination
-├── Media/             upload, derivatives, consent metadata
-└── PublicApi/         versioned HTTP surface consumed by the WebUI
-```
-
-Non-negotiable properties:
-
-- **Authorisation is server-side on every request.** The WebUI's workspace selector is presentation only.
-- **Status transitions are actions**, not field writes (`POST /content/{id}/approve`), exactly as the frontend contract specifies.
-- **Every mutation emits an audit event** in the same transaction as the change, so a change cannot exist without its record.
-- **Service credentials never reach the browser.** The Core proxies or aggregates.
-
-## 6. Data model outline
-
-Core-owned tables (indicative, not final):
-
-| Area | Tables |
+| Gate | Requirement |
 | --- | --- |
-| Identity | `users`, `credentials`, `sessions`, `kyc_submissions`, `kyc_decisions` |
-| Authorisation | `security_groups`, `group_memberships`, `permissions` |
-| Organisations | `organisations`, `organisation_members`, `admin_appointments` |
-| Content | `content`, `announcements`, `events`, `groups`, `status_transitions` |
-| Notifications | `notifications`, `notification_reads` |
-| Audit | `audit_events` (append-only) |
-| Integration | `services`, `service_health`, `sync_cursors`, `sync_records` |
-| Media | `media_assets`, `media_derivatives`, `consent_records` |
+| G1 | Phase 0 exit criteria met |
+| G2 | Stack and database chosen with evidence, not preference |
+| G3 | Boundary split approved (which components are separate deployables) |
+| G4 | Contract (`docs/API-CONTRACT.md`) accepted or amended by you |
+| G5 | Deployment package shape agreed: compose layout, env template, backup/restore, rollback |
+| G6 | Migration approach agreed **after** D1–D3, not before |
 
-Design notes:
+## 10. Risks of proceeding without discovery
 
-- **Audit append-only.** No `UPDATE` or `DELETE` grants on `audit_events` for the application role. Consider a per-row hash of the previous event to make tampering detectable.
-- **Soft deletes with tombstones** on content, so an offline client learns something disappeared.
-- **`updated_at` on every syncable row**, indexed, for cursor-based deltas.
-- **Client-generated ids** are stored as `client_id` with a uniqueness constraint per user, which is what makes outbox replay safe.
-
-## 7. Integration layer
-
-The layer exists so that adding Migle, MovieBrain, TV & Radio or a community app never touches Core business rules.
-
-**Connector contract** (each service implements):
-
-```
-identify()            → id, name, version, capabilities
-health()              → ok | degraded | offline, with detail
-search(query, opts)   → normalised results          (if searchable)
-fetch(id)             → normalised record           (if addressable)
-sync(cursor)          → changed records + new cursor (if cacheable)
-```
-
-**Registry:** services are rows in `services`, not code. An administrator enables or disables one; the WebUI already models this and the state must come from here.
-
-**Health monitoring:** a scheduled check updates `service_health`; the Modules & Services screen reads it. Never probe a service from the browser.
-
-**Events:** integration emits domain events (`content.published`, `service.down`) that notifications and audit consume.
-
-**Offline coordination:** responsible for pulling curated content while a link exists and serving it from local storage afterwards. This is the mechanism behind "clean curated internet served to communities".
-
-## 8. API surface
-
-`docs/API-CONTRACT.md` already specifies what the current WebUI calls: session, profile, notifications, records with status actions, audit, offline sync and media.
-
-The architecture diagram adds three gaps that contract does not yet cover:
-
-| Gap | Endpoint shape | Notes |
-| --- | --- | --- |
-| Organisation profile | `GET/PATCH /organisations/{id}` | Self-service for org admins; review rules later |
-| Service registry | `GET /services`, `GET /services/{id}`, `POST /services/{id}/enable|disable` | Replaces the prototype's local overrides |
-| Search proxy | `GET /search?q=&type=` | Core proxies to Migle, applies access rules, returns normalised results |
-
-`GET /audit` and `GET /audit/{id}` are already in the contract and are the read side of the audit trail the WebUI now displays.
-
-## 9. Offline and sync protocol
-
-This is the highest-risk area and deserves explicit design, not retrofitting.
-
-1. Client keeps a cursor per collection.
-2. `GET /content?since=<cursor>` returns changed rows **and tombstones** plus a new cursor.
-3. Client writes go to its outbox with a `client_id`; the server returns the existing record on replay.
-4. Conflicts: server wins on status; draft text conflicts are surfaced to the author, never merged silently.
-5. Media uploads are separate, resumable, and never inlined in JSON.
-
-Acceptance: pull the network during a draft, create and edit records, restore the network, and the server ends with exactly one copy of each record.
-
-## 10. Non-functional requirements
-
-| Concern | Target |
+| Risk | Consequence |
 | --- | --- |
-| Availability | Core serves from the provincial server while the internet is down |
-| Backup | Nightly `pg_dump` + media volume snapshot; **restore rehearsed quarterly** |
-| RPO / RTO | Propose 24 h / 4 h for a provincial deployment |
-| Audit retention | Indefinite; exportable |
-| Notification retention | 90 days active, then archive |
-| Security | TLS at NGINX, admin 2FA, least-privilege DB role, secrets in env files, no secrets in images |
-| Observability | Container logs to stdout, health endpoint, disk-space alert (archives fill disks) |
-| Media consent | Records consent for identifiable people; traditional/cultural imagery handled deliberately |
+| Building a second identity system | Community accounts fragment; trust lost |
+| Choosing a stack the maintainers cannot operate | Platform decays after handover |
+| Creating a parallel offline content pipeline | Duplicated storage and inconsistent curation (violates A12) |
+| Designing around one service (e.g. Migle) | Integration Layer ossifies; A9 defeated |
+| Assuming single-server capacity | Disk exhaustion from media/archives |
+| Deploying without a rehearsed restore | Unrecoverable loss in a single-site province |
 
-## 11. Environments and release
+## 11. What I will not do without your approval
 
-`dev` (workstation) → `staging` (compose on a test host, seeded data) → `provincial` (Kundiawa).
+- select a language, framework or database;
+- create a Core skeleton, repository structure or migrations;
+- propose a container topology as if decided;
+- design a migration for Kundiawa;
+- modify or replace the existing offline acquisition framework;
+- treat a recommendation in this document as approved.
 
-Release rule: a WebUI build and a Core image are versioned together in one compose file per province. A province upgrades by pulling new images and running migrations; rollback is the previous image tag plus a restored dump if a migration was destructive.
+## 12. Decisions needed from you now
 
-## 12. Migration from the existing deployment
+Only these four are blocking Phase 0 from starting:
 
-The platform has run for two years in Kundiawa, so this is an upgrade, not a greenfield launch:
+1. **Access for the inventory** — who runs the read-only host/container commands, and can the output be shared here? (D1)
+2. **Source availability** — can the existing platform's source be reviewed, or is it unavailable? (Q2, D5)
+3. **Boundary workshop** — are you available for a 1–2 hour session to settle Q7 and Q8? (D6)
+4. **Maintenance reality** — who operates and maintains this after handover, and what languages are they comfortable with? (Q11, D7)
 
-1. Inventory what the current system stores (users, organisations, content) and where.
-2. Decide reuse vs reset per entity — identity reuse is strongly preferred.
-3. Write a one-way import with a dry-run report: counts, rejected rows, and reasons.
-4. Run both systems in parallel for a defined pilot window; the old one stays authoritative until cutover is signed off.
-5. Keep the old deployment intact and offline for one month after cutover.
-
-## 13. Phased delivery
-
-Indicative durations; they assume one developer and will change with your team.
-
-| Phase | Deliverable | Exit criteria |
-| --- | --- | --- |
-| **0. Decisions** (1 wk) | D1–D8 answered; environment names and hosts agreed | Stack chosen in writing; repository created |
-| **1. Skeleton** (1–2 wk) | Core container, Postgres, migrations, `/health`, CI, secrets layout | `docker compose up` serves `/api/v1/health`; migrations run |
-| **2. Identity** (2–3 wk) | Sessions, security groups, profile, notifications, audit backbone | WebUI's profile, notification and audit screens work against the real API |
-| **3. Content and approval** (3–4 wk) | Records, status machine, organisations, registration decisions, media upload | The draft → submitted → approved → published journey works end to end with real persistence |
-| **4. Integration layer** (2–3 wk) | Registry, connector contract, health, first two connectors (Migle + one media service) | Modules & Services reads live health; adding a third service needs no Core change |
-| **5. Offline hardening** (2 wk) | Cursors, tombstones, replay, conflict handling, bandwidth behaviour | §9 acceptance test passes with the network repeatedly cut |
-| **6. Pilot** (2 wk+) | Parallel run at Kundiawa, import, training notes | Owner signs off; old platform retired on a known date |
-
-## 14. Risks
-
-| Risk | Impact | Mitigation |
-| --- | --- | --- |
-| Offline semantics treated as an afterthought | Duplicate or lost content; loss of trust | Phase 5 gates release; contract already requires `client_id` |
-| Identity migration done badly | Community members locked out | Dry-run import with a report; parallel operation |
-| Single provincial server failure | Total local outage | Documented restore; spare disk; quarterly rehearsal |
-| Disk growth from archives/media | Silent failure | Disk alerts; retention policy; archive pruning |
-| One maintainer | Bus factor | Documented runbook; boring, conventional stack |
-| Admin account compromise | Platform-wide damage | 2FA, audit, least privilege, separate admin accounts |
-| Scope creep into a "portal redesign" | Never ships | This plan changes the backend only; WebUI is already built |
-
-## 15. What I need from you
-
-1. **D1** — what language/framework does the existing Kundiawa platform use, and who maintains it?
-2. **D7** — can we read the existing user/organisation data, or does identity start fresh?
-3. **D2** — is PostgreSQL acceptable, or is a database already in use?
-4. **D5** — roughly how much media (photos, audio, documents) per province, and how often does it change?
-5. **D8** — who will maintain this after handover: you, a staff member, or a contractor?
-6. **D6** — the servers you mentioned: Docker Compose hosts, or a Swarm/Kubernetes cluster?
-7. **Migle** — is it an existing service with an API, or something still to be built? The integration layer's first connector depends on the answer.
-
-## 16. Recommended immediate step
-
-Do **Phase 0** before writing code: answer the seven questions above, then freeze D1–D8 in a short decision record. Everything else in this plan is reversible; the stack choice is the expensive one to get wrong.
-
-Once D1 is settled, Phase 1 is roughly a day of work — I can produce the Core skeleton, compose file, migrations and health endpoint so the provincial server has something real to run while Phase 2 proceeds.
+Everything else can be discovered in Phase 0.
 
 ---
 
-**End of plan — draft, not approved.**
+**End of plan v0.2.** Review document only. No implementation has begun.
