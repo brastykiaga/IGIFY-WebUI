@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Search Wikimedia Commons for Papua New Guinea photographs per module and
  * download 800px thumbnails for review.
  *

@@ -140,3 +140,9 @@ included as a visual prototype. Organisation Admin uses its own fixed theme.
 
 Do not commit API keys, passwords, private certificates, `.env` files or other
 secrets.
+
+**Source files are UTF-8.** Avoid round-tripping them through PowerShell
+`Get-Content`/`Set-Content`: on Windows PowerShell 5.1 `Get-Content` decodes
+UTF-8 as ANSI, so writing it back double-encodes every non-ASCII character
+(interface icons such as `⌂` render as `âŒ‚`). Use the editor tools, or specify
+`-Encoding UTF8` on both read and write, and never leave a byte-order mark.
