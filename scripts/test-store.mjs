@@ -110,5 +110,18 @@ expectThrow(
   'invalid_transition'
 )
 
+// ── Service overrides ───────────────────────────────────────────────────
+check('no service overrides initially', Object.keys(store.listServiceOverrides()).length === 0)
+store.setServiceStatus('azuracast', 'disabled', { actor: 'Reviewer' })
+const overrides = store.listServiceOverrides()
+check('service status override is stored', overrides.azuracast?.status === 'disabled')
+check('service change is audited', store.listAudit().some((e) => e.action === 'service.disabled'))
+expectThrow(
+  'unknown service status is refused',
+  () => store.setServiceStatus('azuracast', 'nonsense'),
+  'invalid_status'
+)
+check('service override survives reload', createLocalStore().listServiceOverrides().azuracast?.status === 'disabled')
+
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
 process.exitCode = failures === 0 ? 0 : 1

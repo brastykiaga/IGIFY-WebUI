@@ -13,7 +13,7 @@
  * `Search` is accepted in every workspace even though it is not a sidebar item.
  */
 
-const EXTRA_PAGES = new Set(['Search'])
+const EXTRA_PAGES = new Set(['Search', 'Notifications'])
 
 export function routeHash({ env, page, detail, search } = {}) {
   const parts = [env, encodeURIComponent(page)]

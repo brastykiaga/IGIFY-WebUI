@@ -127,23 +127,23 @@ derived from the L2 blocks the document does specify.
 | --- | --- | --- | --- |
 | 1 | News / announcement article | News and announcement cards | **Built** (pattern + 2 records) |
 | 2 | Learning resource / lesson | Learn, Learning spotlight, Learning opportunities | **Built** (pattern + 2 records) |
-| 3 | Book / reading item | Reading and books, Saved resources | Not built |
+| 3 | Book / reading item | Reading and books, Saved resources | **Built** — details and availability; no reader yet |
 | 4 | Media item and player | Listen & Watch (radio, TV, video) | **Built** (pattern + 1 record, no player) |
 | 5 | Event detail | Upcoming, learning and faith events | **Built** (pattern + 1 record) |
 | 6 | Public group detail | Public group information, My Groups | **Built** (pattern + 1 record) |
 | 7 | Organisation public profile | Organisation updates, notices | **Built** (pattern + 1 record) |
 | 8 | Search results | Search IGIFY field | **Built** (local content; not connected to Migle) |
-| 9 | Notification archive | "View all" in the inbox | Not built |
+| 9 | Notification archive | "View all" in the inbox | **Built** — full history, mark read, clear |
 | 10 | Draft / content record with approval | Content & Editorial, Organisation Content | **Built** — edit, submit, approve, reject, publish |
 | 11 | User record | Users & Identity | **Built** — registration detail and approve/reject |
-| 12 | Organisation record | Organisations | Not built |
+| 12 | Organisation record | Organisations | **Built** — approve, reject, suspend |
 | 13 | Audit event | Audit & Activity | **Built** — live register and event detail |
-| 14 | Service / module record | Modules & Services | Not built |
+| 14 | Service / module record | Modules & Services | **Built** — enable/disable, health |
 
-Ten of the fourteen now have a working screen: six record types through one
-shared layout, plus search, the draft/approval record, the registration record
-and the audit event. The remaining four (book/reading detail, notification
-archive, organisation record, service record) need decisions rather than markup.
+All fourteen now have a working screen. Six record types share one detail
+layout; search, the draft/approval record, the registration record, the audit
+event, the notification archive, the book record and the service record each
+have their own screen built on the same primitives.
 
 Two further screens are implied but arguably belong to L1:
 
@@ -203,8 +203,8 @@ These decisions are needed before the missing screens can be built consistently:
 ## 11. Summary answer
 
 - **Workspace pages:** 30 planned, 30 exist. Nothing missing at this level.
-- **Detail screens:** 10 of the 14 needed now work (six through one shared
-  record pattern, plus search, approval, registration and audit); **4 remain**.
+- **Detail screens:** all **14** now work; none were specified in the plan, so
+they were agreed from the content blocks and built on shared primitives.
 - **Card buttons wired:** 28 of 126 (22%).
 - **Controls needing a destination:** **110**.
 - The prototype now has a *corridor* through it — routing, back navigation and a

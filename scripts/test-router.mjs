@@ -88,6 +88,10 @@ check(
   parseRoute('#/admin/Search?q=user', ENVS)?.page === 'Search'
 )
 check('empty query yields no search value', parseRoute('#/public/Search', ENVS)?.search === null)
+check(
+  'notifications archive is addressable in any workspace',
+  parseRoute('#/admin/Notifications', ENVS)?.page === 'Notifications'
+)
 
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
 process.exitCode = failures === 0 ? 0 : 1

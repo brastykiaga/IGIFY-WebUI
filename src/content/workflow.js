@@ -14,6 +14,7 @@ export const STATUS_LABELS = {
   rejected: 'Rejected',
   published: 'Published',
   archived: 'Archived',
+  suspended: 'Suspended',
 }
 
 export const STATUS_ORDER = ['draft', 'submitted', 'approved', 'published']
@@ -23,9 +24,10 @@ export const ALLOWED = {
   draft: ['submitted'],
   rejected: ['submitted', 'draft'],
   submitted: ['approved', 'rejected'],
-  approved: ['published'],
+  approved: ['published', 'suspended'],
   published: ['archived'],
   archived: [],
+  suspended: [],
   // Registrations (users, organisations, groups): decided once, not published.
   pending: ['approved', 'rejected'],
 }
@@ -40,12 +42,13 @@ export function isEditable(status) {
 }
 
 /** Actions a workspace may offer for a record in a given status. */
-export function actionsFor(status, workspace) {
+export function actionsFor(status, workspace, collection = 'content') {
   const isReviewer = workspace === 'admin'
   if (status === 'pending') {
     // Registration review: a decision, not a publishing pipeline.
     return isReviewer ? ['approved', 'rejected'] : []
   }
+  if (status === 'suspended' || status === 'archived') return []
   if (status === 'draft' || status === 'rejected') {
     return isReviewer ? ['submitted', 'draft'] : ['submitted']
   }
@@ -53,6 +56,8 @@ export function actionsFor(status, workspace) {
     return isReviewer ? ['approved', 'rejected'] : []
   }
   if (status === 'approved') {
+    // An approved organisation can be suspended; content is published.
+    if (collection === 'organisations') return isReviewer ? ['suspended'] : []
     return isReviewer ? ['published'] : []
   }
   return []
@@ -63,5 +68,6 @@ export const ACTION_LABELS = {
   approved: 'Approve',
   rejected: 'Reject',
   published: 'Publish',
+  suspended: 'Suspend',
   draft: 'Return to draft',
 }

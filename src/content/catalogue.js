@@ -10,6 +10,7 @@
 export const TYPE_LABELS = {
   news: 'News',
   learn: 'Learning',
+  books: 'Book',
   events: 'Event',
   groups: 'Group',
   organisations: 'Organisation',
@@ -96,6 +97,43 @@ export const CATALOGUE = {
       meta: [
         { label: 'Lessons', value: '4' },
         { label: 'Audience', value: 'First-time users' },
+      ],
+    }),
+  ],
+
+  books: [
+    record('books', {
+      id: 'highlands-stories',
+      title: 'Stories from the Highlands',
+      summary: 'Collected oral histories from Simbu communities, recorded and transcribed locally.',
+      image: '/images/card-learn.jpg',
+      publishedAt: '2026-07-14',
+      source: 'IGIFY Library',
+      body: [
+        'A collection of oral histories gathered in Simbu Province, covering settlement, gardening, trade and community life across several generations.',
+        'The book is stored locally and can be read without an internet connection. A reading view is not yet implemented in this prototype.',
+      ],
+      meta: [
+        { label: 'Pages', value: 'Sample: 128' },
+        { label: 'Format', value: 'PDF, EPUB' },
+        { label: 'Availability', value: 'Offline copy' },
+      ],
+    }),
+    record('books', {
+      id: 'garden-handbook',
+      title: 'The Highland Garden Handbook',
+      summary: 'Practical notes on soil, compost, seed saving and household food gardens.',
+      image: '/images/card-farming.jpg',
+      publishedAt: '2026-06-02',
+      source: 'IGIFY Library',
+      body: [
+        'A short practical handbook for household gardens in the highlands, covering soil preparation, composting, seed saving and seasonal planting.',
+        'Written for readers with no formal training and illustrated with simple diagrams. Stored locally for offline reading.',
+      ],
+      meta: [
+        { label: 'Pages', value: 'Sample: 64' },
+        { label: 'Format', value: 'PDF' },
+        { label: 'Availability', value: 'Offline copy' },
       ],
     }),
   ],
@@ -206,6 +244,9 @@ export const CARD_LINKS = {
   'Learning spotlight': { type: 'learn', id: 'coffee-farming' },
   'Learning opportunities': { type: 'learn', id: 'digital-basics' },
   'Digital skills': { type: 'learn', id: 'digital-basics' },
+  'Digital library': { type: 'books', id: 'highlands-stories' },
+  'Saved books': { type: 'books', id: 'highlands-stories' },
+  'Saved lessons': { type: 'learn', id: 'coffee-farming' },
   'Upcoming events': { type: 'events', id: 'provincial-agricultural-show' },
   'Public group information': { type: 'groups', id: 'women-in-business' },
   'Organisation updates': { type: 'organisations', id: 'kundiawa-health-centre' },

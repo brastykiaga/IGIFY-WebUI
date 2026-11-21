@@ -27,6 +27,9 @@ mobile-first, lightweight and fast.
   member workspace.
 - **Collapsible sidebar:** an icon rail on desktop with hover/focus labels; an
   overlay drawer with backdrop on small screens. The choice is remembered.
+- **Complete detail set:** books, notifications archive, organisation suspension
+  and the service register all have working screens. All fourteen detail screens
+  identified in `docs/PAGE-INVENTORY.md` are built.
 - **Registration review and audit trail:** registrations and groups are decided
   once (approved or rejected) by an administrator, and every creation, edit and
   status change writes an audit event that is browsable in *Audit & Activity*.

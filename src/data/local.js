@@ -13,7 +13,7 @@
 
 const PREFS_KEY = 'igify-webui-v1'
 const DATA_KEY = 'igify-webui-data-v1'
-const MAX_NOTIFICATIONS = 20
+const MAX_NOTIFICATIONS = 100
 
 import { canTransition, isEditable } from '../content/workflow.js'
 const DEFAULT_PREFS = {
@@ -83,6 +83,7 @@ function migrateLegacyState() {
     notifications: Array.isArray(existing.notifications) ? existing.notifications : [],
     records: { ...clone(DEFAULT_RECORDS), ...(existing.records || {}) },
     audit: Array.isArray(existing.audit) ? existing.audit : [],
+    services: existing.services && typeof existing.services === 'object' ? existing.services : {},
   }
 
   if (prefs.profile) data.profile = { ...data.profile, ...prefs.profile }
@@ -134,6 +135,7 @@ export function createLocalStore() {
     notifications: Array.isArray(stored.notifications) ? stored.notifications : [],
     records: { ...clone(DEFAULT_RECORDS), ...(stored.records || {}) },
     audit: Array.isArray(stored.audit) ? stored.audit : [],
+    services: stored.services && typeof stored.services === 'object' ? stored.services : {},
   }
 
   // Seed once, and never overwrite notifications that already exist (a stored
@@ -323,6 +325,24 @@ export function createLocalStore() {
       })
       persist()
       return { ...next }
+    },
+
+    // ── Service overrides ────────────────────────────────────
+    listServiceOverrides() {
+      return { ...(data.services || {}) }
+    },
+
+    setServiceStatus(id, status, { actor = 'You' } = {}) {
+      const allowed = ['enabled', 'disabled']
+      if (!allowed.includes(status)) {
+        const error = new Error(`Unknown service status: ${status}`)
+        error.code = 'invalid_status'
+        throw error
+      }
+      data.services = { ...(data.services || {}), [id]: { status, updatedAt: Date.now() } }
+      appendAudit({ actor, action: `service.${status}`, target: { collection: 'services', id, title: id } })
+      persist()
+      return { ...data.services[id] }
     },
 
     // ── Audit log ────────────────────────────────────────────

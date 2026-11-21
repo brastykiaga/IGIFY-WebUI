@@ -459,6 +459,30 @@ textarea.field { resize: vertical; font-family: inherit; }
 .result-title:hover { color: var(--accent); text-decoration: underline; }
 .result-snippet { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
 
+/* ── Notification archive ────────────────────────────────────────────── */
+.notif-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* ── Service register ────────────────────────────────────────────────── */
+.service-list { list-style: none; margin: 0; padding: 0; }
+.service-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.service-row:last-child { border-bottom: none; }
+.service-row .record-link { grid-column: 1; }
+.service-meta { grid-column: 1; font-size: 11px; color: var(--muted); }
+.service-row .status { grid-row: 1 / span 2; grid-column: 2; }
+
 /* ── Audit register ──────────────────────────────────────────────────── */
 .audit-list { list-style: none; margin: 0; padding: 0; }
 .audit-row {
@@ -499,6 +523,7 @@ textarea.field { resize: vertical; font-family: inherit; }
 .status-submitted { color: #8a6d1f; }
 .status-approved { color: #33546b; }
 .status-rejected { color: #8a3737; }
+.status-suspended { color: #8a3737; }
 .status-published { color: var(--surface); background: var(--text); border-color: var(--text); }
 
 .record-panel .panel-head h2 { font-size: 17px; }

@@ -43,6 +43,20 @@ check('reviewer sees publish on an approved record', actionsFor('approved', 'adm
 check('author sees no action on an approved record', actionsFor('approved', 'org').length === 0)
 check('published records offer nothing further', actionsFor('published', 'admin').length === 0)
 
+// ── Organisation suspension ─────────────────────────────────────────────
+check('approved can be suspended', canTransition('approved', 'suspended'))
+check('suspended is terminal', !canTransition('suspended', 'approved'))
+check(
+  'an approved organisation offers suspension, not publishing',
+  actionsFor('approved', 'admin', 'organisations').includes('suspended') &&
+    !actionsFor('approved', 'admin', 'organisations').includes('published')
+)
+check(
+  'approved content still offers publishing',
+  actionsFor('approved', 'admin', 'content').includes('published')
+)
+check('authors cannot suspend an organisation', actionsFor('approved', 'org', 'organisations').length === 0)
+
 // ── Registration review ─────────────────────────────────────────────────
 check('pending can be approved', canTransition('pending', 'approved'))
 check('pending can be rejected', canTransition('pending', 'rejected'))

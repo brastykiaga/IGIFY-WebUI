@@ -3,6 +3,7 @@ import photoCredits from '../docs/photo-credits.json'
 import { store } from './data/index.js'
 import { CARD_LINKS, findRecord, TYPE_LABELS } from './content/catalogue.js'
 import { ACTION_LABELS, actionsFor, isEditable, STATUS_LABELS } from './content/workflow.js'
+import { findService, HEALTH_LABELS, SERVICES, SERVICE_STATUS_LABELS } from './content/services.js'
 import { iconSvg, NAV_ICONS } from './icons.js'
 import { parseRoute, routeHash } from './router.js'
 import { searchAll, TYPE_PAGE } from './search.js'
@@ -60,6 +61,7 @@ const state = {
   notifications: store.listNotifications(),
   items: store.allRecords(),
   audit: store.listAudit(),
+  services: store.listServiceOverrides(),
 }
 
 // A shared or reloaded URL wins over the last visited page.
@@ -641,7 +643,7 @@ function memberMessages() {
       <div class="section-title"><h2>Messages</h2><p>Member messages and unread indicators.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Inbox</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Inbox</h2><button class="text-action" data-action="open-notifications-page">View all →</button></div>
       <div class="feature-grid">
         ${card('Unread messages', 'Messages you have not yet read.')}
         ${card('Conversations', 'Your message threads.')}
@@ -929,16 +931,24 @@ function adminCommunitySafety() {
 }
 
 function adminModulesServices() {
+  const overrides = state.services || {}
+  const rows = SERVICES.map((service) => {
+    const status = overrides[service.id]?.status || service.status
+    return `<li class="service-row">
+      <button class="record-link" data-action="open-service" data-id="${escapeHtml(service.id)}">${escapeHtml(service.name)}</button>
+      <span class="service-meta">${escapeHtml(service.category)} · ${escapeHtml(HEALTH_LABELS[service.health])}</span>
+      <span class="status status-${status === 'enabled' ? 'approved' : 'draft'}">${escapeHtml(SERVICE_STATUS_LABELS[status])}</span>
+    </li>`
+  }).join('')
+
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Modules &amp; Services</h2><button class="primary" data-action="demo">Manage services</button></div>
-      <div class="feature-grid">
-        ${card('Modules', 'Manage IGIFY modules and services.')}
-        ${card('Radio & TV', 'Radio and TV management.')}
-        ${card('Learning', 'Learning resources.')}
-        ${card('Search', 'Migle search and content availability.')}
-        ${card('Health', 'Service health and availability indicators.')}
-      </div>
+      <div class="panel-head"><h2>Services</h2><span class="muted">${SERVICES.length} configured</span></div>
+      <ul class="service-list">${rows}</ul>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Notes</h2></div>
+      <p class="muted">Health and availability are illustrative in this prototype. Real values would come from the Service Integration Layer described in the design baseline.</p>
     </section>
   `
 }
@@ -1195,7 +1205,7 @@ function notificationsModal() {
         )
         .join('')}</ul>`
     : `<p class="muted">No notifications.</p>`
-  const foot = `<button class="outline" data-action="clear-notifications">Clear all</button><button class="primary" data-action="mark-all-read">Mark all read</button>`
+  const foot = `<button class="outline" data-action="open-notifications-page">View all</button><button class="outline" data-action="clear-notifications">Clear all</button><button class="primary" data-action="mark-all-read">Mark all read</button>`
   return modalShell('Notifications', body, foot)
 }
 
@@ -1319,7 +1329,7 @@ function findCreatedRecord(id) {
 /** Draft / approval screen for records created in this prototype. */
 function recordView({ record, collection }) {
   const isEditorial = ['content', 'announcements', 'events'].includes(collection)
-  const actions = actionsFor(record.status, state.env)
+  const actions = actionsFor(record.status, state.env, collection)
   const editable = isEditorial && isEditable(record.status)
 
   const actionButtons = actions
@@ -1378,6 +1388,67 @@ function recordView({ record, collection }) {
     <section class="panel">
       <div class="panel-head"><h2>History</h2></div>
       <ul class="record-history">${history || '<li><small>No history yet.</small></li>'}</ul>
+    </section>
+  </div>`
+}
+
+/** Full notification history. */
+function notificationsPage() {
+  const list = state.notifications || []
+  const unread = list.filter((n) => !n.read).length
+
+  if (!list.length) {
+    return `<section class="panel">
+      <div class="panel-head"><h2>Notifications</h2><span class="muted">0</span></div>
+      <p class="muted">No notifications. Activity such as a record being approved will appear here.</p>
+    </section>`
+  }
+
+  const rows = list
+    .map(
+      (n) => `<li class="${n.read ? '' : 'unread'}">
+        <span class="notif-dot" aria-hidden="true"></span>
+        <div>
+          <strong>${escapeHtml(n.title)}</strong>
+          <p>${escapeHtml(n.body)}</p>
+          <small>${escapeHtml(formatTime(n.at))}</small>
+        </div>
+      </li>`
+    )
+    .join('')
+
+  return `<section class="panel">
+    <div class="panel-head"><h2>Notifications</h2><span class="muted">${unread} unread · ${list.length} total</span></div>
+    <div class="notif-actions">
+      <button class="outline" data-action="mark-all-read">Mark all read</button>
+      <button class="outline danger" data-action="clear-notifications">Clear all</button>
+    </div>
+    <ul class="notif-list">${rows}</ul>
+  </section>`
+}
+
+/** Single service record. */
+function serviceDetailView(service) {
+  const override = (state.services || {})[service.id]
+  const status = override?.status || service.status
+  const next = status === 'enabled' ? 'disabled' : 'enabled'
+
+  return `<div class="detail-wrap">
+    <button class="back-link" data-action="detail-back">${iconSvg('arrowLeft', 16)} Back to ${escapeHtml(state.page)}</button>
+    <section class="panel">
+      <div class="panel-head"><h2>${escapeHtml(service.name)}</h2><span class="status status-${status === 'enabled' ? 'approved' : 'draft'}">${escapeHtml(SERVICE_STATUS_LABELS[status])}</span></div>
+      <div class="record-meta">
+        <div><span class="meta-label">Category</span><span>${escapeHtml(service.category)}</span></div>
+        <div><span class="meta-label">Health</span><span>${escapeHtml(HEALTH_LABELS[service.health])}</span></div>
+        ${override?.updatedAt ? `<div><span class="meta-label">Changed</span><span>${escapeHtml(formatTime(override.updatedAt))}</span></div>` : ''}
+      </div>
+      <div class="record-editor">
+        <p class="muted">${escapeHtml(service.description)}</p>
+        <p class="muted">Health is illustrative in this prototype. Real values would come from the Service Integration Layer.</p>
+        <div class="record-actions">
+          <button class="${next === 'disabled' ? 'outline danger' : 'primary'}" data-action="service-toggle" data-id="${escapeHtml(service.id)}" data-to="${next}">${next === 'disabled' ? 'Disable service' : 'Enable service'}</button>
+        </div>
+      </div>
     </section>
   </div>`
 }
@@ -1466,8 +1537,14 @@ function render() {
       : null
   if (state.detail?.type === 'audit' && !auditEvent) state.detail = null
 
-  const isSearch = !record && !created && !auditEvent && state.page === 'Search'
-  const heading = auditEvent
+  const service = state.detail?.type === 'service' ? findService(state.detail.id) : null
+  if (state.detail?.type === 'service' && !service) state.detail = null
+
+  const isSearch = !record && !created && !auditEvent && !service && state.page === 'Search'
+  const isNotifications = !record && !created && !auditEvent && !service && state.page === 'Notifications'
+  const heading = service
+    ? { eyebrow: 'SERVICE', title: service.name, subtitle: service.description }
+    : auditEvent
     ? { eyebrow: 'AUDIT EVENT', title: auditEvent.action, subtitle: auditEvent.note || 'Recorded administrative event.' }
     : created
     ? {
@@ -1568,9 +1645,9 @@ function render() {
               <h1>${escapeHtml(heading.title)}</h1>
               <p>${escapeHtml(heading.subtitle)}</p>
             </div>
-            ${state.env === 'admin' && !record && !created && !isSearch ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
+            ${state.env === 'admin' && !record && !created && !isSearch && !isNotifications && !service ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
           </div>
-          ${auditEvent ? auditDetailView(auditEvent) : created ? recordView(created) : record ? detailView(record, state.page) : isSearch ? searchPage(state.search) : contentFor(state.env, state.page)}
+          ${service ? serviceDetailView(service) : auditEvent ? auditDetailView(auditEvent) : created ? recordView(created) : record ? detailView(record, state.page) : isSearch ? searchPage(state.search) : isNotifications ? notificationsPage() : contentFor(state.env, state.page)}
           <footer>
             IGIFY WebUI Prototype v1.1
             <span>Frontend demonstration · Not connected to production services</span>
@@ -1648,6 +1725,16 @@ function render() {
           const env = environments[state.env].nav.includes(targetPage) ? state.env : 'public'
           go({ env, page: targetPage, detail: { type, id: b.dataset.id } })
         }
+      } else if (a === 'open-notifications-page') {
+        go({ env: state.env, page: 'Notifications' })
+      } else if (a === 'open-service') {
+        go({ env: state.env, page: state.page, detail: { type: 'service', id: b.dataset.id } })
+      } else if (a === 'service-toggle') {
+        store.setServiceStatus(b.dataset.id, b.dataset.to, { actor: state.profile.name })
+        state.services = store.listServiceOverrides()
+        state.audit = store.listAudit()
+        render()
+        notify(`Service ${b.dataset.to}.`)
       } else if (a === 'open-audit') {
         go({ env: state.env, page: state.page, detail: { type: 'audit', id: b.dataset.id } })
       } else if (a === 'open-record') {
