@@ -760,7 +760,7 @@ These interactions are real interactions with local, on-device data. They are **
 - Radio, TV, music and video playback are not connected.
 - Notifications and messaging are local-only; no messaging service is connected.
 - Detail screens: six of the fourteen identified in `docs/PAGE-INVENTORY.md` exist through one shared layout. Book/reading detail, search results, notification archive, draft/approval, user record, organisation record, audit event and service record are not built.
-- Ninety-eight card buttons and twelve static controls still show a placeholder message rather than opening a screen.
+- Eighty-three card buttons still show a placeholder message. All former static placeholder controls have been resolved: those with a real destination now navigate, and the rest were replaced with working content or an explicit informational note.
 - Card photographs are Papua New Guinea images from Wikimedia Commons, not IGIFY content. CC BY and CC BY-SA images carry attribution obligations, surfaced in the app's Photo credits panel; CC BY-SA also imposes share-alike on modified derivatives. Replacing them with IGIFY's own photography removes these obligations (`docs/SAMPLE-IMAGES.md`).
 - Detail routes are hash-based (`#/`), not path-based, because the deployment must work as static files behind NGINX without a rewrite rule per route.
 - The five light themes are selectable in the prototype for demonstration. The agreed production model remains administrator-controlled allocation by audience category rather than free user choice.

@@ -84,6 +84,10 @@ function migrateLegacyState() {
     records: { ...clone(DEFAULT_RECORDS), ...(existing.records || {}) },
     audit: Array.isArray(existing.audit) ? existing.audit : [],
     services: existing.services && typeof existing.services === 'object' ? existing.services : {},
+    orgProfile: existing.orgProfile || {
+      name: 'Sample organisation',
+      about: 'A community organisation serving the district. Demonstration content.',
+    },
   }
 
   if (prefs.profile) data.profile = { ...data.profile, ...prefs.profile }
@@ -136,6 +140,10 @@ export function createLocalStore() {
     records: { ...clone(DEFAULT_RECORDS), ...(stored.records || {}) },
     audit: Array.isArray(stored.audit) ? stored.audit : [],
     services: stored.services && typeof stored.services === 'object' ? stored.services : {},
+    orgProfile: stored.orgProfile || {
+      name: 'Sample organisation',
+      about: 'A community organisation serving the district. Demonstration content.',
+    },
   }
 
   // Seed once, and never overwrite notifications that already exist (a stored
@@ -325,6 +333,25 @@ export function createLocalStore() {
       })
       persist()
       return { ...next }
+    },
+
+    // ── Organisation profile ────────────────────────────────
+    getOrgProfile() {
+      return { ...data.orgProfile }
+    },
+
+    updateOrgProfile({ name, about } = {}) {
+      data.orgProfile = {
+        name: name === undefined ? data.orgProfile.name : String(name).trim(),
+        about: about === undefined ? data.orgProfile.about : String(about).trim(),
+      }
+      appendAudit({
+        actor: 'You',
+        action: 'organisation.profile.updated',
+        target: { collection: 'organisations', id: 'self', title: data.orgProfile.name },
+      })
+      persist()
+      return { ...data.orgProfile }
     },
 
     // ── Service overrides ────────────────────────────────────

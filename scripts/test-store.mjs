@@ -110,6 +110,14 @@ expectThrow(
   'invalid_transition'
 )
 
+// ── Organisation profile ────────────────────────────────────────────────
+const org = store.getOrgProfile()
+check('organisation profile has defaults', Boolean(org.name))
+store.updateOrgProfile({ name: 'Kundiawa Health Centre', about: 'Clinic and outreach.' })
+check('organisation profile saves', store.getOrgProfile().name === 'Kundiawa Health Centre')
+check('profile edit is audited', store.listAudit().some((e) => e.action === 'organisation.profile.updated'))
+check('profile survives reload', createLocalStore().getOrgProfile().name === 'Kundiawa Health Centre')
+
 // ── Service overrides ───────────────────────────────────────────────────
 check('no service overrides initially', Object.keys(store.listServiceOverrides()).length === 0)
 store.setServiceStatus('azuracast', 'disabled', { actor: 'Reviewer' })

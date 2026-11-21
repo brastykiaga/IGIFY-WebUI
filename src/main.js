@@ -62,6 +62,7 @@ const state = {
   items: store.allRecords(),
   audit: store.listAudit(),
   services: store.listServiceOverrides(),
+  orgProfile: store.getOrgProfile(),
 }
 
 // A shared or reloaded URL wins over the last visited page.
@@ -566,7 +567,7 @@ function memberHome() {
       <p>Pick up where you left off, keep track of your learning and stay connected with your community.</p>
     </section>
     <section class="section">
-      <div class="section-title"><h2>Continue where you left off</h2><a data-action="demo">View history →</a></div>
+      <div class="section-title"><h2>Continue where you left off</h2><button class="text-action" data-action="card-page" data-page-target="Continue Learning">View history →</button></div>
       <div class="feature-grid">
         ${card('Your learning', 'Return to your last lesson or saved learning resource.')}
         ${card('Saved resources', 'Books, articles and useful material saved for later.')}
@@ -611,7 +612,7 @@ function memberContinueLearning() {
       <div class="section-title"><h2>Continue Learning</h2><p>Resume your last lesson or learning resource.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Your learning</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Your learning</h2></div>
       <div class="feature-grid">
         ${card('Last lesson', 'Return to where you left off.')}
         ${card('Recent activity', 'Your recent learning history.')}
@@ -627,7 +628,7 @@ function memberSavedResources() {
       <div class="section-title"><h2>Saved Resources</h2><p>Saved books, articles, documents and lessons.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Your saved items</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Your saved items</h2></div>
       <div class="feature-grid">
         ${card('Saved books', 'Books saved for later reading.')}
         ${card('Saved articles', 'Articles and documents.')}
@@ -663,7 +664,7 @@ function memberMyGroups() {
       <div class="section-title"><h2>My Groups</h2><p>Groups you are permitted to view or participate in.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Your groups</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Your groups</h2><button class="text-action" data-action="open-result" data-kind="record" data-type="groups" data-id="women-in-business">View all →</button></div>
       <div class="feature-grid">
         ${card('Group activity', 'Updates from your groups.')}
         ${card('Membership', 'Your group memberships.')}
@@ -725,18 +726,35 @@ function orgOverview() {
 }
 
 function orgProfile() {
+  const org = state.orgProfile
   return `
     <section class="section">
       <div class="section-title"><h2>Organisation Profile</h2><p>Maintain your organisation’s public information.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Organisation details</h2><button class="primary" data-action="demo">Edit profile</button></div>
-      <div class="feature-grid">
-        ${card('Public information', 'Maintain approved public organisation information.')}
-        ${card('Review', 'Changes may require review depending on the field and policy.')}
+      <div class="panel-head"><h2>Organisation details</h2><button class="primary" data-action="org-profile-edit">Edit profile</button></div>
+      <div class="profile-grid">
+        <div class="profile-field"><span class="meta-label">Name</span><strong>${escapeHtml(org.name)}</strong></div>
+        <div class="profile-field"><span class="meta-label">About</span><strong>${escapeHtml(org.about)}</strong></div>
       </div>
     </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Review</h2></div>
+      <p class="muted">In the completed system, changes to public fields would be submitted for review. In this prototype they save immediately and are recorded in the audit trail.</p>
+    </section>
   `
+}
+
+function orgProfileModal() {
+  const org = state.orgProfile
+  const body = `
+    <label class="field-label" for="org-name">Organisation name</label>
+    <input id="org-name" class="control-input field" maxlength="80" value="${escapeHtml(org.name)}" />
+    <label class="field-label" for="org-about">About</label>
+    <textarea id="org-about" class="control-input field" rows="3" maxlength="300">${escapeHtml(org.about)}</textarea>
+  `
+  const foot = `<button class="outline" data-action="close-modal">Cancel</button><button class="primary" data-action="org-profile-save">Save profile</button>`
+  return modalShell('Organisation profile', body, foot)
 }
 
 function orgMembers() {
@@ -745,12 +763,13 @@ function orgMembers() {
       <div class="section-title"><h2>Members</h2><p>View organisation membership within granted permissions.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Membership</h2><button class="primary" data-action="demo">Manage roles</button></div>
+      <div class="panel-head"><h2>Membership</h2></div>
       <div class="feature-grid">
         ${card('Members', 'View organisation membership.')}
         ${card('Roles', 'Manage permitted organisation roles or requests.')}
         ${card('Rules', 'Do not bypass IGIFY identity and approval rules.')}
       </div>
+      <p class="muted">Role management needs live membership data from the backend, so it is not enabled in this prototype.</p>
     </section>
   `
 }
@@ -814,7 +833,12 @@ function orgReports() {
       <div class="section-title"><h2>Reports</h2><p>View available organisation activity and engagement summaries.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Activity summaries</h2><button class="primary" data-action="demo">View reports</button></div>
+      <div class="panel-head"><h2>Activity summaries</h2><span class="muted">Illustrative sample</span></div>
+      <div class="stats">
+        <div class="stat"><span>Published items</span><b>18</b><small>Sample</small></div>
+        <div class="stat"><span>Event attendance</span><b>240</b><small>Sample</small></div>
+        <div class="stat"><span>Resource downloads</span><b>96</b><small>Sample</small></div>
+      </div>
       <div class="feature-grid">
         ${card('Engagement', 'View organisation engagement summaries.')}
         ${card('Activity', 'View organisation activity reports.')}
@@ -834,7 +858,7 @@ function adminDashboard() {
       <div class="stat"><span>Services</span><b>14 / 16</b><small>Illustrative sample</small></div>
     </div>
     <section class="panel">
-      <div class="panel-head"><h2>Pending attention</h2><button class="outline" data-action="demo">View queue</button></div>
+      <div class="panel-head"><h2>Pending attention</h2><button class="outline" data-action="card-page" data-page-target="Content &amp; Editorial">View queue</button></div>
       <div class="row-item"><span>Identity reviews awaiting decision</span><b>7</b></div>
       <div class="row-item"><span>Organisation requests</span><b>3</b></div>
       <div class="row-item"><span>Content awaiting approval</span><b>2</b></div>
@@ -1001,7 +1025,7 @@ function adminAppearanceInterface() {
 function adminPlatformSystem() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Platform &amp; System</h2><button class="primary" data-action="demo">Configure platform</button></div>
+      <div class="panel-head"><h2>Platform &amp; System</h2><span class="muted">Read-only in this prototype</span></div>
       <div class="feature-grid">
         ${card('Configuration', 'General platform configuration.')}
         ${card('Provincial', 'Local provincial settings.')}
@@ -1660,6 +1684,7 @@ function render() {
       ${state.modal === 'create' ? createModal() : ''}
       ${state.modal === 'create-form' ? createFormModal() : ''}
       ${state.modal === 'credits' ? creditsModal() : ''}
+      ${state.modal === 'org-profile' ? orgProfileModal() : ''}
       <div class="toast ${state.toast ? 'show' : ''}" role="status" aria-live="polite">${escapeHtml(state.toast)}</div>
     </div>
   `
@@ -1774,6 +1799,23 @@ function render() {
         addNotification(`Record ${STATUS_LABELS[to] || to}`, note || `Status changed to ${STATUS_LABELS[to] || to}.`)
         render()
         notify(`Record marked ${(STATUS_LABELS[to] || to).toLowerCase()}.`)
+      } else if (a === 'org-profile-edit') {
+        state.modal = 'org-profile'
+        render()
+      } else if (a === 'org-profile-save') {
+        const nameEl = document.querySelector('#org-name')
+        const aboutEl = document.querySelector('#org-about')
+        const name = (nameEl?.value || '').trim()
+        if (!name) {
+          notify('Enter an organisation name first.')
+          nameEl?.focus()
+          return
+        }
+        state.orgProfile = store.updateOrgProfile({ name, about: (aboutEl?.value || '').trim() })
+        state.audit = store.listAudit()
+        state.modal = null
+        render()
+        notify('Organisation profile saved.')
       } else if (a === 'profile') {
         state.modal = 'profile'
         render()

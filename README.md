@@ -27,6 +27,10 @@ mobile-first, lightweight and fast.
   member workspace.
 - **Collapsible sidebar:** an icon rail on desktop with hover/focus labels; an
   overlay drawer with backdrop on small screens. The choice is remembered.
+- **No static dead controls:** the Organisation Profile is editable (saved and
+  audited), the admin queue opens Content & Editorial, member history opens
+  Continue Learning, and panels without a destination state why rather than
+  offering a button that does nothing.
 - **Complete detail set:** books, notifications archive, organisation suspension
   and the service register all have working screens. All fourteen detail screens
   identified in `docs/PAGE-INVENTORY.md` are built.
