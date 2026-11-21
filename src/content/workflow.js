@@ -26,8 +26,8 @@ export const ALLOWED = {
   approved: ['published'],
   published: ['archived'],
   archived: [],
-  // Non-editorial records (registrations, groups) sit outside this machine.
-  pending: [],
+  // Registrations (users, organisations, groups): decided once, not published.
+  pending: ['approved', 'rejected'],
 }
 
 export function canTransition(from, to) {
@@ -42,6 +42,10 @@ export function isEditable(status) {
 /** Actions a workspace may offer for a record in a given status. */
 export function actionsFor(status, workspace) {
   const isReviewer = workspace === 'admin'
+  if (status === 'pending') {
+    // Registration review: a decision, not a publishing pipeline.
+    return isReviewer ? ['approved', 'rejected'] : []
+  }
   if (status === 'draft' || status === 'rejected') {
     return isReviewer ? ['submitted', 'draft'] : ['submitted']
   }

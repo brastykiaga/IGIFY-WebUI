@@ -82,6 +82,7 @@ function migrateLegacyState() {
     profile: { ...clone(DEFAULT_PROFILE), ...(existing.profile || {}) },
     notifications: Array.isArray(existing.notifications) ? existing.notifications : [],
     records: { ...clone(DEFAULT_RECORDS), ...(existing.records || {}) },
+    audit: Array.isArray(existing.audit) ? existing.audit : [],
   }
 
   if (prefs.profile) data.profile = { ...data.profile, ...prefs.profile }
@@ -132,6 +133,7 @@ export function createLocalStore() {
     profile: { ...clone(DEFAULT_PROFILE), ...(stored.profile || {}) },
     notifications: Array.isArray(stored.notifications) ? stored.notifications : [],
     records: { ...clone(DEFAULT_RECORDS), ...(stored.records || {}) },
+    audit: Array.isArray(stored.audit) ? stored.audit : [],
   }
 
   // Seed once, and never overwrite notifications that already exist (a stored
@@ -145,6 +147,21 @@ export function createLocalStore() {
 
   // Persist the migration/seed result on first construction.
   persist()
+
+  const MAX_AUDIT = 200
+
+  function appendAudit({ actor = 'Unknown', action, target, note = '' }) {
+    data.audit.unshift({
+      id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      at: Date.now(),
+      actor: String(actor),
+      action: String(action),
+      target,
+      outcome: 'success',
+      note: String(note || ''),
+    })
+    if (data.audit.length > MAX_AUDIT) data.audit.length = MAX_AUDIT
+  }
 
   function ensureCollection(collection) {
     if (!Array.isArray(data.records[collection])) data.records[collection] = []
@@ -212,7 +229,7 @@ export function createLocalStore() {
       return out
     },
 
-    createRecord(collection, { title, detail = '', status = 'draft' } = {}) {
+    createRecord(collection, { title, detail = '', status = 'draft', actor = 'You' } = {}) {
       const now = Date.now()
       const record = {
         id: `rec-${now}-${Math.random().toString(36).slice(2, 7)}`,
@@ -225,6 +242,11 @@ export function createLocalStore() {
         history: [{ at: now, from: null, to: String(status || 'draft'), actor: 'You', note: 'Created' }],
       }
       ensureCollection(collection).unshift(record)
+      appendAudit({
+        actor,
+        action: `${collection}.created`,
+        target: { collection, id: record.id, title: record.title },
+      })
       persist()
       return { ...record }
     },
@@ -255,6 +277,11 @@ export function createLocalStore() {
         version: (record.version || 1) + 1,
       }
       list[index] = next
+      appendAudit({
+        actor: 'You',
+        action: `${collection}.edited`,
+        target: { collection, id: next.id, title: next.title },
+      })
       persist()
       return { ...next }
     },
@@ -288,8 +315,24 @@ export function createLocalStore() {
         ],
       }
       list[index] = next
+      appendAudit({
+        actor,
+        action: `${collection}.${to}`,
+        target: { collection, id: next.id, title: next.title },
+        note,
+      })
       persist()
       return { ...next }
+    },
+
+    // ── Audit log ────────────────────────────────────────────
+    listAudit() {
+      return (data.audit || []).map((event) => ({ ...event }))
+    },
+
+    getAudit(id) {
+      const found = (data.audit || []).find((event) => event.id === id)
+      return found ? { ...found } : null
     },
 
     // ── Interface preferences ────────────────────────────────

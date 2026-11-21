@@ -43,6 +43,15 @@ check('reviewer sees publish on an approved record', actionsFor('approved', 'adm
 check('author sees no action on an approved record', actionsFor('approved', 'org').length === 0)
 check('published records offer nothing further', actionsFor('published', 'admin').length === 0)
 
+// ── Registration review ─────────────────────────────────────────────────
+check('pending can be approved', canTransition('pending', 'approved'))
+check('pending can be rejected', canTransition('pending', 'rejected'))
+check('pending cannot be published', !canTransition('pending', 'published'))
+check('approved registration is terminal', !canTransition('approved', 'rejected'))
+const reviewerPending = actionsFor('pending', 'admin')
+check('reviewer sees approve and reject for a pending record', reviewerPending.includes('approved') && reviewerPending.includes('rejected'))
+check('author sees no decision on a pending record', actionsFor('pending', 'org').length === 0)
+
 // ── Editing ─────────────────────────────────────────────────────────────
 check('drafts are editable', isEditable('draft'))
 check('rejected records are editable', isEditable('rejected'))

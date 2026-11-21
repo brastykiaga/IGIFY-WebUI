@@ -176,6 +176,32 @@ export function createHttpStore(baseUrl, options = {}) {
       return (data?.items || []).map(toRecord)
     },
 
+    async getRecord(collection, id) {
+      return toRecord(await request(`/${collection}/${id}`))
+    },
+
+    async updateRecord(collection, id, patch = {}) {
+      const row = await request(`/${collection}/${id}`, { method: 'PATCH', body: patch })
+      return toRecord(row)
+    },
+
+    /** Transitions are actions, never field writes (see the API contract). */
+    async transitionRecord(collection, id, { to, note = '' } = {}) {
+      const action = { submitted: 'submit', approved: 'approve', rejected: 'reject', published: 'publish' }[to]
+      if (!action) throw new Error(`Unsupported transition: ${to}`)
+      const row = await request(`/${collection}/${id}/${action}`, { method: 'POST', body: { note } })
+      return toRecord(row)
+    },
+
+    async listAudit() {
+      const data = await request('/audit')
+      return Array.isArray(data?.items) ? data.items : []
+    },
+
+    async getAudit(id) {
+      return request(`/audit/${id}`)
+    },
+
     async allRecords() {
       const entries = await Promise.all(
         COLLECTIONS.map(async (collection) => [collection, await this.listRecords(collection)])

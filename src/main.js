@@ -59,6 +59,7 @@ const state = {
   profile: store.getProfile(),
   notifications: store.listNotifications(),
   items: store.allRecords(),
+  audit: store.listAudit(),
 }
 
 // A shared or reloaded URL wins over the last visited page.
@@ -1006,18 +1007,49 @@ function adminPlatformSystem() {
 }
 
 function adminAuditActivity() {
+  const events = state.audit || []
+  const rows = events
+    .slice(0, 60)
+    .map(
+      (event) => `<li class="audit-row">
+        <button class="record-link" data-action="open-audit" data-id="${escapeHtml(event.id)}">${escapeHtml(event.action)}</button>
+        <span class="audit-meta">${escapeHtml(event.actor)} · ${escapeHtml(formatTime(event.at))}${event.target?.title ? ` · ${escapeHtml(event.target.title)}` : ''}</span>
+      </li>`
+    )
+    .join('')
+
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Audit &amp; Activity</h2><button class="primary" data-action="demo">View audit log</button></div>
+      <div class="panel-head"><h2>Audit register</h2><span class="muted">${events.length} event${events.length === 1 ? '' : 's'}</span></div>
+      ${rows ? `<ul class="audit-list">${rows}</ul>` : '<p class="muted">No audit events yet. Create a record or change its status to produce one.</p>'}
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Audit controls</h2></div>
       <div class="feature-grid">
-        ${card('Audit register', 'Audit event register.')}
         ${card('Events', 'Actor, timestamp, action, category and outcome.')}
         ${card('Approvals', 'Approval and publishing events.')}
-        ${card('Security', 'Security and administrative events.')}
         ${card('Export', 'Exportable audit records where authorised.')}
       </div>
     </section>
   `
+}
+
+/** Single audit event. */
+function auditDetailView(event) {
+  const target = event.target || {}
+  return `<div class="detail-wrap">
+    <button class="back-link" data-action="detail-back">${iconSvg('arrowLeft', 16)} Back to ${escapeHtml(state.page)}</button>
+    <section class="panel">
+      <div class="panel-head"><h2>${escapeHtml(event.action)}</h2><span class="status status-approved">${escapeHtml(event.outcome || 'success')}</span></div>
+      <div class="record-meta">
+        <div><span class="meta-label">Actor</span><span>${escapeHtml(event.actor || 'Unknown')}</span></div>
+        <div><span class="meta-label">When</span><span>${escapeHtml(formatTime(event.at))}</span></div>
+        <div><span class="meta-label">Target</span><span>${escapeHtml(target.title || target.id || '—')}${target.collection ? ` (${escapeHtml(target.collection)})` : ''}</span></div>
+        <div><span class="meta-label">Note</span><span>${escapeHtml(event.note || '—')}</span></div>
+        <div><span class="meta-label">Event ID</span><span>${escapeHtml(event.id)}</span></div>
+      </div>
+    </section>
+  </div>`
 }
 
 // ── Content router ────────────────────────────────────────────────────────
@@ -1243,8 +1275,9 @@ function submitCreate() {
     return
   }
   const detail = (detailEl?.value || '').trim()
-  store.createRecord(t.collection, { title, detail, status: t.status })
+  store.createRecord(t.collection, { title, detail, status: t.status, actor: state.profile.name })
   state.items = store.allRecords()
+  state.audit = store.listAudit()
   addNotification(`${t.label} saved`, `${title} — ${(STATUS_LABELS[t.status] || t.status).toLowerCase()}.`)
 
   // Stay inside the Organisation Admin workspace for its own content and events.
@@ -1266,6 +1299,15 @@ function submitCreate() {
 // ── Render ────────────────────────────────────────────────────────────────
 
 /** Locate a record created in this prototype, with its collection. */
+const COLLECTION_LABELS = {
+  users: 'Users',
+  organisations: 'Organisations',
+  content: 'Content',
+  announcements: 'Announcements',
+  groups: 'Groups',
+  events: 'Events',
+}
+
 function findCreatedRecord(id) {
   for (const [collection, items] of Object.entries(state.items)) {
     const record = (items || []).find((item) => item.id === id)
@@ -1275,9 +1317,10 @@ function findCreatedRecord(id) {
 }
 
 /** Draft / approval screen for records created in this prototype. */
-function draftView({ record, collection }) {
+function recordView({ record, collection }) {
+  const isEditorial = ['content', 'announcements', 'events'].includes(collection)
   const actions = actionsFor(record.status, state.env)
-  const editable = isEditable(record.status)
+  const editable = isEditorial && isEditable(record.status)
 
   const actionButtons = actions
     .map((to) => {
@@ -1324,7 +1367,7 @@ function draftView({ record, collection }) {
         <span class="status status-${escapeHtml(record.status)}">${escapeHtml(STATUS_LABELS[record.status] || record.status)}</span>
       </div>
       <div class="record-meta">
-        <div><span class="meta-label">Collection</span><span>${escapeHtml(collection)}</span></div>
+        <div><span class="meta-label">Collection</span><span>${escapeHtml(COLLECTION_LABELS[collection] || collection)}</span></div>
         <div><span class="meta-label">Created</span><span>${escapeHtml(formatTime(record.at))}</span></div>
         <div><span class="meta-label">Updated</span><span>${escapeHtml(formatTime(record.updatedAt || record.at))}</span></div>
         <div><span class="meta-label">Version</span><span>${escapeHtml(String(record.version || 1))}</span></div>
@@ -1417,8 +1460,16 @@ function render() {
   const record = !isRecordDetail && state.detail ? findRecord(state.detail.type, state.detail.id) : null
   if (!isRecordDetail && state.detail && !record) state.detail = null
 
-  const isSearch = !record && !created && state.page === 'Search'
-  const heading = created
+  const auditEvent =
+    state.detail?.type === 'audit'
+      ? (state.audit || []).find((event) => event.id === state.detail.id)
+      : null
+  if (state.detail?.type === 'audit' && !auditEvent) state.detail = null
+
+  const isSearch = !record && !created && !auditEvent && state.page === 'Search'
+  const heading = auditEvent
+    ? { eyebrow: 'AUDIT EVENT', title: auditEvent.action, subtitle: auditEvent.note || 'Recorded administrative event.' }
+    : created
     ? {
         eyebrow: 'CONTENT RECORD',
         title: created.record.title,
@@ -1499,7 +1550,7 @@ function render() {
         ${state.offline ? '<div class="offline-banner show">● Offline — content served from local cache</div>' : ''}
         <header class="topbar">
           <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">${iconSvg('menu', 20)}</button>
-          <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}${record || created ? ` <span>/</span> ${escapeHtml((created || record).record?.title || record?.title || '')}` : ''}</div>
+          <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}${record || created || auditEvent ? ` <span>/</span> ${escapeHtml(auditEvent ? auditEvent.action : (created || record).record?.title || record?.title || '')}` : ''}</div>
           <div class="top-actions">
             <div class="search" role="search" aria-label="Search IGIFY">
               ${iconSvg('search', 16)}
@@ -1519,7 +1570,7 @@ function render() {
             </div>
             ${state.env === 'admin' && !record && !created && !isSearch ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
           </div>
-          ${created ? draftView(created) : record ? detailView(record, state.page) : isSearch ? searchPage(state.search) : contentFor(state.env, state.page)}
+          ${auditEvent ? auditDetailView(auditEvent) : created ? recordView(created) : record ? detailView(record, state.page) : isSearch ? searchPage(state.search) : contentFor(state.env, state.page)}
           <footer>
             IGIFY WebUI Prototype v1.1
             <span>Frontend demonstration · Not connected to production services</span>
@@ -1597,6 +1648,8 @@ function render() {
           const env = environments[state.env].nav.includes(targetPage) ? state.env : 'public'
           go({ env, page: targetPage, detail: { type, id: b.dataset.id } })
         }
+      } else if (a === 'open-audit') {
+        go({ env: state.env, page: state.page, detail: { type: 'audit', id: b.dataset.id } })
       } else if (a === 'open-record') {
         go({ env: state.env, page: state.page, detail: { type: 'record', id: b.dataset.id } })
       } else if (a === 'record-save') {
@@ -1613,6 +1666,7 @@ function render() {
           detail: (detailEl?.value || '').trim(),
         })
         state.items = store.allRecords()
+        state.audit = store.listAudit()
         render()
         notify('Draft saved.')
       } else if (a === 'record-transition') {
@@ -1629,6 +1683,7 @@ function render() {
           return
         }
         state.items = store.allRecords()
+        state.audit = store.listAudit()
         addNotification(`Record ${STATUS_LABELS[to] || to}`, note || `Status changed to ${STATUS_LABELS[to] || to}.`)
         render()
         notify(`Record marked ${(STATUS_LABELS[to] || to).toLowerCase()}.`)

@@ -91,5 +91,24 @@ expectThrow(
 
 check('record survives a reload of the store', createLocalStore().getRecord('content', record.id)?.status === 'published')
 
+// ── Audit trail ─────────────────────────────────────────────────────────
+const audit = store.listAudit()
+check('audit records the creation', audit.some((e) => e.action === 'content.created'))
+check('audit records each transition', audit.filter((e) => e.target?.id === record.id && e.action.startsWith('content.')).length >= 4)
+check('audit records the actor', audit.some((e) => e.actor === 'Reviewer'))
+check('audit events are addressable', Boolean(store.getAudit(audit[0].id)))
+check('unknown audit id returns null', store.getAudit('missing') === null)
+
+// ── Registration decision ───────────────────────────────────────────────
+const reg = store.createRecord('users', { title: 'New member', status: 'pending' })
+check('registration starts pending', reg.status === 'pending')
+const decided = store.transitionRecord('users', reg.id, { to: 'approved', actor: 'Reviewer' })
+check('pending registration can be approved', decided.status === 'approved')
+expectThrow(
+  'decided registration cannot be reversed',
+  () => store.transitionRecord('users', reg.id, { to: 'rejected' }),
+  'invalid_transition'
+)
+
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
 process.exitCode = failures === 0 ? 0 : 1

@@ -135,15 +135,15 @@ derived from the L2 blocks the document does specify.
 | 8 | Search results | Search IGIFY field | **Built** (local content; not connected to Migle) |
 | 9 | Notification archive | "View all" in the inbox | Not built |
 | 10 | Draft / content record with approval | Content & Editorial, Organisation Content | **Built** — edit, submit, approve, reject, publish |
-| 11 | User record | Users & Identity | Not built |
+| 11 | User record | Users & Identity | **Built** — registration detail and approve/reject |
 | 12 | Organisation record | Organisations | Not built |
-| 13 | Audit event | Audit & Activity | Not built |
+| 13 | Audit event | Audit & Activity | **Built** — live register and event detail |
 | 14 | Service / module record | Modules & Services | Not built |
 
-Eight of the fourteen now have a working screen: six record types through one
-shared layout, plus search results and the draft/approval record. The remaining
-six need decisions (record fields, retention, notification history) rather than
-just markup.
+Ten of the fourteen now have a working screen: six record types through one
+shared layout, plus search, the draft/approval record, the registration record
+and the audit event. The remaining four (book/reading detail, notification
+archive, organisation record, service record) need decisions rather than markup.
 
 Two further screens are implied but arguably belong to L1:
 
@@ -203,9 +203,8 @@ These decisions are needed before the missing screens can be built consistently:
 ## 11. Summary answer
 
 - **Workspace pages:** 30 planned, 30 exist. Nothing missing at this level.
-- **Detail screens:** 8 of the 14 needed now work (six through one shared record
-  pattern, plus search and the approval record); **6 remain**, none of which the
-  plan specifies.
+- **Detail screens:** 10 of the 14 needed now work (six through one shared
+  record pattern, plus search, approval, registration and audit); **4 remain**.
 - **Card buttons wired:** 28 of 126 (22%).
 - **Controls needing a destination:** **110**.
 - The prototype now has a *corridor* through it — routing, back navigation and a

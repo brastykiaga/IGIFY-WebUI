@@ -27,6 +27,9 @@ mobile-first, lightweight and fast.
   member workspace.
 - **Collapsible sidebar:** an icon rail on desktop with hover/focus labels; an
   overlay drawer with backdrop on small screens. The choice is remembered.
+- **Registration review and audit trail:** registrations and groups are decided
+  once (approved or rejected) by an administrator, and every creation, edit and
+  status change writes an audit event that is browsable in *Audit & Activity*.
 - **Draft and approval workflow:** created records open in a record screen with
   status, history and role-appropriate actions (edit and submit as author;
   approve, reject or publish as reviewer). Status transitions are enforced in the
