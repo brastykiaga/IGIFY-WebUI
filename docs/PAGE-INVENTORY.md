@@ -134,15 +134,16 @@ derived from the L2 blocks the document does specify.
 | 7 | Organisation public profile | Organisation updates, notices | **Built** (pattern + 1 record) |
 | 8 | Search results | Search IGIFY field | **Built** (local content; not connected to Migle) |
 | 9 | Notification archive | "View all" in the inbox | Not built |
-| 10 | Draft / content record with approval | Content & Editorial, Organisation Content | Not built |
+| 10 | Draft / content record with approval | Content & Editorial, Organisation Content | **Built** — edit, submit, approve, reject, publish |
 | 11 | User record | Users & Identity | Not built |
 | 12 | Organisation record | Organisations | Not built |
 | 13 | Audit event | Audit & Activity | Not built |
 | 14 | Service / module record | Modules & Services | Not built |
 
-Seven of the fourteen now have a working screen: six record types through one
-shared layout, plus search results. The remaining seven need decisions (approval
-actions, record fields, retention) rather than just markup.
+Eight of the fourteen now have a working screen: six record types through one
+shared layout, plus search results and the draft/approval record. The remaining
+six need decisions (record fields, retention, notification history) rather than
+just markup.
 
 Two further screens are implied but arguably belong to L1:
 
@@ -202,8 +203,9 @@ These decisions are needed before the missing screens can be built consistently:
 ## 11. Summary answer
 
 - **Workspace pages:** 30 planned, 30 exist. Nothing missing at this level.
-- **Detail screens:** 7 of the 14 needed now work (six through one shared record
-  pattern, plus search); **7 remain**, none of which the plan specifies.
+- **Detail screens:** 8 of the 14 needed now work (six through one shared record
+  pattern, plus search and the approval record); **6 remain**, none of which the
+  plan specifies.
 - **Card buttons wired:** 28 of 126 (22%).
 - **Controls needing a destination:** **110**.
 - The prototype now has a *corridor* through it — routing, back navigation and a

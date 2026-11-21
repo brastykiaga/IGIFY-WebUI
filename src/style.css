@@ -459,6 +459,74 @@ textarea.field { resize: vertical; font-family: inherit; }
 .result-title:hover { color: var(--accent); text-decoration: underline; }
 .result-snippet { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
 
+/* ── Draft and approval records ──────────────────────────────────────── */
+.record-link {
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+.record-link:hover { color: var(--accent); text-decoration: underline; }
+
+.status {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status-draft { color: var(--muted); }
+.status-pending { color: var(--muted); }
+.status-submitted { color: #8a6d1f; }
+.status-approved { color: #33546b; }
+.status-rejected { color: #8a3737; }
+.status-published { color: var(--surface); background: var(--text); border-color: var(--text); }
+
+.record-panel .panel-head h2 { font-size: 17px; }
+.record-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0 16px 16px;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  font-size: 13px;
+}
+.record-meta > div { display: flex; justify-content: space-between; gap: 16px; }
+
+.record-editor, .record-readonly { padding: 0 16px 16px; }
+.record-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.outline.danger { border-color: #8a3737; color: #8a3737; }
+.outline.danger:hover { background: #8a3737; color: #fff; }
+
+.record-history { list-style: none; margin: 0; padding: 0; }
+.record-history li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.record-history li:last-child { border-bottom: none; }
+.record-history strong { display: block; font-size: 13px; }
+.record-history small { font-size: 11px; color: var(--muted); }
+.history-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
 /* ── Record detail screens ───────────────────────────────────────────── */
 .back-link {
   background: none;

@@ -15,6 +15,7 @@ const PREFS_KEY = 'igify-webui-v1'
 const DATA_KEY = 'igify-webui-data-v1'
 const MAX_NOTIFICATIONS = 20
 
+import { canTransition, isEditable } from '../content/workflow.js'
 const DEFAULT_PREFS = {
   env: 'public',
   page: 'Home',
@@ -211,18 +212,84 @@ export function createLocalStore() {
       return out
     },
 
-    createRecord(collection, { title, detail = '', status = 'Draft' } = {}) {
+    createRecord(collection, { title, detail = '', status = 'draft' } = {}) {
+      const now = Date.now()
       const record = {
-        id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: `rec-${now}-${Math.random().toString(36).slice(2, 7)}`,
         title: String(title || ''),
         detail: String(detail || ''),
-        status: String(status || 'Draft'),
-        at: Date.now(),
+        status: String(status || 'draft'),
+        at: now,
+        updatedAt: now,
         version: 1,
+        history: [{ at: now, from: null, to: String(status || 'draft'), actor: 'You', note: 'Created' }],
       }
       ensureCollection(collection).unshift(record)
       persist()
       return { ...record }
+    },
+
+    getRecord(collection, id) {
+      const found = ensureCollection(collection).find((r) => r.id === id)
+      return found ? { ...found } : null
+    },
+
+    /** Edit the text of an unfinished draft. Status is never editable here. */
+    updateRecord(collection, id, { title, detail } = {}) {
+      const list = ensureCollection(collection)
+      const index = list.findIndex((r) => r.id === id)
+      if (index < 0) return null
+
+      const record = list[index]
+      if (!isEditable(record.status)) {
+        const error = new Error(`A record in ${record.status} cannot be edited`)
+        error.code = 'not_editable'
+        throw error
+      }
+
+      const next = {
+        ...record,
+        title: title === undefined ? record.title : String(title),
+        detail: detail === undefined ? record.detail : String(detail),
+        updatedAt: Date.now(),
+        version: (record.version || 1) + 1,
+      }
+      list[index] = next
+      persist()
+      return { ...next }
+    },
+
+    /**
+     * Apply a status transition, refusing anything the workflow does not allow.
+     * The caller supplies the intended status; this method decides.
+     */
+    transitionRecord(collection, id, { to, actor = 'You', note = '' } = {}) {
+      const list = ensureCollection(collection)
+      const index = list.findIndex((r) => r.id === id)
+      if (index < 0) return null
+
+      const record = list[index]
+      const from = record.status
+      if (!canTransition(from, to)) {
+        const error = new Error(`Cannot move a record from ${from} to ${to}`)
+        error.code = 'invalid_transition'
+        throw error
+      }
+
+      const now = Date.now()
+      const next = {
+        ...record,
+        status: to,
+        updatedAt: now,
+        version: (record.version || 1) + 1,
+        history: [
+          ...(record.history || []),
+          { at: now, from, to, actor: String(actor), note: String(note) },
+        ],
+      }
+      list[index] = next
+      persist()
+      return { ...next }
     },
 
     // ── Interface preferences ────────────────────────────────

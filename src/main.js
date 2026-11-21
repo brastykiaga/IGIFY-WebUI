@@ -2,6 +2,7 @@ import './style.css'
 import photoCredits from '../docs/photo-credits.json'
 import { store } from './data/index.js'
 import { CARD_LINKS, findRecord, TYPE_LABELS } from './content/catalogue.js'
+import { ACTION_LABELS, actionsFor, isEditable, STATUS_LABELS } from './content/workflow.js'
 import { iconSvg, NAV_ICONS } from './icons.js'
 import { parseRoute, routeHash } from './router.js'
 import { searchAll, TYPE_PAGE } from './search.js'
@@ -1073,12 +1074,12 @@ function contentFor(env, page) {
 // ── Local prototype flows: profile, notifications, create ─────────────────
 
 const CREATE_TYPES = {
-  user: { label: 'Register a user', page: 'Users & Identity', collection: 'users', status: 'Pending review' },
-  organisation: { label: 'Register an organisation', page: 'Organisations', collection: 'organisations', status: 'Pending approval' },
-  content: { label: 'Create content', page: 'Content & Editorial', collection: 'content', status: 'Draft' },
-  announcement: { label: 'Publish an announcement', page: 'Content & Editorial', collection: 'announcements', status: 'Draft' },
-  group: { label: 'Create a community group', page: 'Community & Safety', collection: 'groups', status: 'Pending moderation' },
-  event: { label: 'Create an event', page: 'Content & Editorial', collection: 'events', status: 'Draft' },
+  user: { label: 'Register a user', page: 'Users & Identity', collection: 'users', status: 'pending' },
+  organisation: { label: 'Register an organisation', page: 'Organisations', collection: 'organisations', status: 'pending' },
+  content: { label: 'Create content', page: 'Content & Editorial', collection: 'content', status: 'draft' },
+  announcement: { label: 'Publish an announcement', page: 'Content & Editorial', collection: 'announcements', status: 'draft' },
+  group: { label: 'Create a community group', page: 'Community & Safety', collection: 'groups', status: 'pending' },
+  event: { label: 'Create an event', page: 'Content & Editorial', collection: 'events', status: 'draft' },
 }
 
 function unreadCount() {
@@ -1108,10 +1109,10 @@ function createdList(collection, emptyText) {
     .map(
       (item) => `<li>
         <div>
-          <strong>${escapeHtml(item.title)}</strong>
+          <button class="record-link" data-action="open-record" data-collection="${escapeHtml(collection)}" data-id="${escapeHtml(item.id)}">${escapeHtml(item.title)}</button>
           ${item.detail ? `<span>${escapeHtml(item.detail)}</span>` : ''}
         </div>
-        <small>${escapeHtml(item.status)} · ${escapeHtml(formatTime(item.at))}</small>
+        <small><span class="status status-${escapeHtml(item.status)}">${escapeHtml(STATUS_LABELS[item.status] || item.status)}</span> · ${escapeHtml(formatTime(item.at))}</small>
       </li>`
     )
     .join('')}</ul>`
@@ -1244,7 +1245,7 @@ function submitCreate() {
   const detail = (detailEl?.value || '').trim()
   store.createRecord(t.collection, { title, detail, status: t.status })
   state.items = store.allRecords()
-  addNotification(`${t.label} saved`, `${title} — ${t.status.toLowerCase()}.`)
+  addNotification(`${t.label} saved`, `${title} — ${(STATUS_LABELS[t.status] || t.status).toLowerCase()}.`)
 
   // Stay inside the Organisation Admin workspace for its own content and events.
   const orgTarget = state.env === 'org' && (state.createType === 'content' || state.createType === 'event')
@@ -1263,6 +1264,80 @@ function submitCreate() {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
+
+/** Locate a record created in this prototype, with its collection. */
+function findCreatedRecord(id) {
+  for (const [collection, items] of Object.entries(state.items)) {
+    const record = (items || []).find((item) => item.id === id)
+    if (record) return { record, collection }
+  }
+  return null
+}
+
+/** Draft / approval screen for records created in this prototype. */
+function draftView({ record, collection }) {
+  const actions = actionsFor(record.status, state.env)
+  const editable = isEditable(record.status)
+
+  const actionButtons = actions
+    .map((to) => {
+      const style = to === 'rejected' ? 'outline danger' : to === 'draft' ? 'outline' : 'primary'
+      return `<button class="${style}" data-action="record-transition" data-collection="${escapeHtml(collection)}" data-id="${escapeHtml(record.id)}" data-to="${escapeHtml(to)}">${escapeHtml(ACTION_LABELS[to] || to)}</button>`
+    })
+    .join('')
+
+  const editor = editable
+    ? `<div class="record-editor">
+        <label class="field-label" for="record-title">Title</label>
+        <input id="record-title" class="control-input field" maxlength="90" value="${escapeHtml(record.title)}" />
+        <label class="field-label" for="record-detail">Details</label>
+        <textarea id="record-detail" class="control-input field" rows="4" maxlength="600">${escapeHtml(record.detail || '')}</textarea>
+        <div class="record-actions">
+          <button class="outline" data-action="record-save" data-collection="${escapeHtml(collection)}" data-id="${escapeHtml(record.id)}">Save changes</button>
+          ${actionButtons}
+        </div>
+      </div>`
+    : `<div class="record-readonly">
+        ${record.detail ? `<p class="detail-text"><span>${escapeHtml(record.detail)}</span></p>` : '<p class="muted">No details were provided.</p>'}
+        ${actionButtons ? `<div class="record-actions">${actionButtons}</div>` : ''}
+      </div>`
+
+  const history = (record.history || [])
+    .slice()
+    .reverse()
+    .map(
+      (h) => `<li>
+        <span class="history-dot" aria-hidden="true"></span>
+        <div>
+          <strong>${escapeHtml(STATUS_LABELS[h.to] || h.to)}</strong>
+          <small>${escapeHtml(h.actor || 'Unknown')} · ${escapeHtml(formatTime(h.at))}${h.note ? ` · ${escapeHtml(h.note)}` : ''}</small>
+        </div>
+      </li>`
+    )
+    .join('')
+
+  return `<div class="detail-wrap">
+    <button class="back-link" data-action="detail-back">${iconSvg('arrowLeft', 16)} Back to ${escapeHtml(state.page)}</button>
+    <section class="panel record-panel">
+      <div class="panel-head">
+        <h2>${escapeHtml(record.title)}</h2>
+        <span class="status status-${escapeHtml(record.status)}">${escapeHtml(STATUS_LABELS[record.status] || record.status)}</span>
+      </div>
+      <div class="record-meta">
+        <div><span class="meta-label">Collection</span><span>${escapeHtml(collection)}</span></div>
+        <div><span class="meta-label">Created</span><span>${escapeHtml(formatTime(record.at))}</span></div>
+        <div><span class="meta-label">Updated</span><span>${escapeHtml(formatTime(record.updatedAt || record.at))}</span></div>
+        <div><span class="meta-label">Version</span><span>${escapeHtml(String(record.version || 1))}</span></div>
+      </div>
+      ${editor}
+      ${actions.includes('rejected') || actions.includes('submitted') ? `<label class="field-label" for="record-note">Review note (optional)</label><input id="record-note" class="control-input field" maxlength="200" placeholder="Reason or comment" />` : ''}
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>History</h2></div>
+      <ul class="record-history">${history || '<li><small>No history yet.</small></li>'}</ul>
+    </section>
+  </div>`
+}
 
 /** Search results screen. */
 function searchPage(query) {
@@ -1335,27 +1410,37 @@ function render() {
   const e = environments[state.env]
 
   // A stale or hand-edited detail route should fall back to the page, not blank.
-  const record = state.detail ? findRecord(state.detail.type, state.detail.id) : null
-  if (state.detail && !record) state.detail = null
+  const isRecordDetail = state.detail?.type === 'record'
+  const created = isRecordDetail ? findCreatedRecord(state.detail.id) : null
+  if (isRecordDetail && !created) state.detail = null
 
-  const isSearch = !record && state.page === 'Search'
-  const heading = record
+  const record = !isRecordDetail && state.detail ? findRecord(state.detail.type, state.detail.id) : null
+  if (!isRecordDetail && state.detail && !record) state.detail = null
+
+  const isSearch = !record && !created && state.page === 'Search'
+  const heading = created
     ? {
-        eyebrow: TYPE_LABELS[record.type] || 'RECORD',
-        title: record.title,
-        subtitle: record.summary || '',
+        eyebrow: 'CONTENT RECORD',
+        title: created.record.title,
+        subtitle: created.record.detail || 'Record created in this prototype.',
       }
-    : isSearch
+    : record
       ? {
-          eyebrow: 'SEARCH IGIFY',
-          title: 'Search',
-          subtitle: state.search ? `Results for “${state.search}”` : 'Search pages and content.',
+          eyebrow: TYPE_LABELS[record.type] || 'RECORD',
+          title: record.title,
+          subtitle: record.summary || '',
         }
-      : {
-          eyebrow: e.label.toUpperCase(),
-          title: state.page === 'Home' ? e.title : state.page,
-          subtitle: e.subtitle,
-        }
+      : isSearch
+        ? {
+            eyebrow: 'SEARCH IGIFY',
+            title: 'Search',
+            subtitle: state.search ? `Results for “${state.search}”` : 'Search pages and content.',
+          }
+        : {
+            eyebrow: e.label.toUpperCase(),
+            title: state.page === 'Home' ? e.title : state.page,
+            subtitle: e.subtitle,
+          }
 
   // Organisation Admin has its own fixed theme, unaffected by light allocation or Dark Mode.
   document.documentElement.dataset.theme = state.env === 'org' ? 'org' : state.dark ? 'dark' : state.theme
@@ -1414,7 +1499,7 @@ function render() {
         ${state.offline ? '<div class="offline-banner show">● Offline — content served from local cache</div>' : ''}
         <header class="topbar">
           <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">${iconSvg('menu', 20)}</button>
-          <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}${record ? ` <span>/</span> ${escapeHtml(record.title)}` : ''}</div>
+          <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}${record || created ? ` <span>/</span> ${escapeHtml((created || record).record?.title || record?.title || '')}` : ''}</div>
           <div class="top-actions">
             <div class="search" role="search" aria-label="Search IGIFY">
               ${iconSvg('search', 16)}
@@ -1432,9 +1517,9 @@ function render() {
               <h1>${escapeHtml(heading.title)}</h1>
               <p>${escapeHtml(heading.subtitle)}</p>
             </div>
-            ${state.env === 'admin' && !record && !isSearch ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
+            ${state.env === 'admin' && !record && !created && !isSearch ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
           </div>
-          ${record ? detailView(record, state.page) : isSearch ? searchPage(state.search) : contentFor(state.env, state.page)}
+          ${created ? draftView(created) : record ? detailView(record, state.page) : isSearch ? searchPage(state.search) : contentFor(state.env, state.page)}
           <footer>
             IGIFY WebUI Prototype v1.1
             <span>Frontend demonstration · Not connected to production services</span>
@@ -1512,6 +1597,41 @@ function render() {
           const env = environments[state.env].nav.includes(targetPage) ? state.env : 'public'
           go({ env, page: targetPage, detail: { type, id: b.dataset.id } })
         }
+      } else if (a === 'open-record') {
+        go({ env: state.env, page: state.page, detail: { type: 'record', id: b.dataset.id } })
+      } else if (a === 'record-save') {
+        const titleEl = document.querySelector('#record-title')
+        const detailEl = document.querySelector('#record-detail')
+        const title = (titleEl?.value || '').trim()
+        if (!title) {
+          notify('Enter a title first.')
+          titleEl?.focus()
+          return
+        }
+        store.updateRecord(b.dataset.collection, b.dataset.id, {
+          title,
+          detail: (detailEl?.value || '').trim(),
+        })
+        state.items = store.allRecords()
+        render()
+        notify('Draft saved.')
+      } else if (a === 'record-transition') {
+        const to = b.dataset.to
+        const note = (document.querySelector('#record-note')?.value || '').trim()
+        try {
+          store.transitionRecord(b.dataset.collection, b.dataset.id, {
+            to,
+            actor: state.profile.name,
+            note,
+          })
+        } catch (err) {
+          notify(err.message || 'That change is not allowed.')
+          return
+        }
+        state.items = store.allRecords()
+        addNotification(`Record ${STATUS_LABELS[to] || to}`, note || `Status changed to ${STATUS_LABELS[to] || to}.`)
+        render()
+        notify(`Record marked ${(STATUS_LABELS[to] || to).toLowerCase()}.`)
       } else if (a === 'profile') {
         state.modal = 'profile'
         render()

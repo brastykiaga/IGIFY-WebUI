@@ -27,6 +27,10 @@ mobile-first, lightweight and fast.
   member workspace.
 - **Collapsible sidebar:** an icon rail on desktop with hover/focus labels; an
   overlay drawer with backdrop on small screens. The choice is remembered.
+- **Draft and approval workflow:** created records open in a record screen with
+  status, history and role-appropriate actions (edit and submit as author;
+  approve, reject or publish as reviewer). Status transitions are enforced in the
+  data layer, not only by hiding buttons.
 - **Search results:** the header field now returns ranked results across content and
   workspace pages, at a shareable address (`#/public/Search?q=coffee`). Local
   index only — not yet connected to Migle.
@@ -105,6 +109,8 @@ node scripts/mock-api.mjs 8099         # in-memory mock of the API contract
 node scripts/test-http-store.mjs       # adapter + outbox checks against the mock
 node scripts/test-router.mjs           # route parsing and rejection checks
 node scripts/test-search.mjs           # search relevance and edge cases
+node scripts/test-workflow.mjs         # editorial status transitions and roles
+node scripts/test-store.mjs            # record lifecycle and store guards
 node scripts/fetch-png-photos.mjs      # search Commons for card photography
 python scripts/build-contact-sheet.py  # labelled review sheet of candidates
 python scripts/adopt-photos.py         # crop and resize chosen photos
