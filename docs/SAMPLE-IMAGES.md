@@ -1,7 +1,7 @@
 # Card photographs
 
-The prototype uses real Papua New Guinea photographs, chosen per module by
-visual review. They are bundled in `public/images/` so the interface keeps
+The prototype uses real Papua New Guinea photographs, chosen by visual review and
+assigned per card so a page does not repeat the same image in a grid. They are bundled in `public/images/` so the interface keeps
 working offline rather than hotlinking a third party.
 
 ## Provenance
@@ -11,15 +11,22 @@ licences that permit reuse. Three carry attribution obligations, which the app
 surfaces under **Photo credits** in the footer (data in
 `docs/photo-credits.json`).
 
-| Module | File | Subject | Creator | Licence |
-| --- | --- | --- | --- | --- |
-| news | `card-news.jpg` | Gathering in Kundiawa, Simbu | eGuide Travel | CC BY 2.0 |
-| learn | `card-learn.jpg` | School assembly, Lea High School, Lae | U.S. Navy (PO3 Adriana Immormino) | Public domain |
-| discover | `card-discover.jpg` | Highlands valley, Papua New Guinea | eGuide Travel | CC BY 2.0 |
-| community | `card-community.jpg` | Goroka Show performers | Anselmo Lastra | CC BY 2.0 |
-| faith | `card-faith.jpg` | Reformed Ministries Church, Kandep District | Nicxon.Piaso | CC BY-SA 4.0 |
-| farming | `card-farming.jpg` | Hut with vegetable garden, PNG highlands | gailhampshire | CC BY 2.0 |
-| media | `card-media.jpg` | Student warrior dancer, Papua New Guinea | Kizomo | CC BY-SA 4.0 |
+| File | Creator | Licence |
+| --- | --- | --- |
+| `card-news.jpg` | eGuide Travel | CC BY 2.0 |
+| `card-town.jpg` | eGuide Travel | CC BY 2.0 |
+| `card-learn.jpg` | U.S. Navy photo by Petty Officer 3rd Class Adriana Immormino | Public domain |
+| `card-school.jpg` | U.S. Navy photo by Petty Officer 3rd Class Adriana Immormino | Public domain |
+| `card-discover.jpg` | eGuide Travel | CC BY 2.0 |
+| `card-landscape.jpg` | eGuide Travel | CC BY 2.0 |
+| `card-community.jpg` | Anselmo Lastra | CC BY 2.0 |
+| `card-festival.jpg` | Unknown | Public domain |
+| `card-faith.jpg` | Nicxon.Piaso | CC BY-SA 4.0 |
+| `card-farming.jpg` | gailhampshire from Cradley, Malvern, U.K | CC BY 2.0 |
+| `card-garden.jpg` | eGuide Travel | CC BY 2.0 |
+| `card-media.jpg` | Kizomo | CC BY-SA 4.0 |
+| `card-performance.jpg` | U.S. Marine Corps photo by Cpl. Migel Reynosa | Public domain |
+| `card-dance.jpg` | U.S. Coast Guard (photographer uncredited) | Public domain |
 
 Source URLs, full titles and licence links are recorded in
 `docs/photo-credits.json` and shown in the in-app credits panel.
@@ -38,7 +45,7 @@ all third-party obligations and better represents the province.
 ## Processing
 
 Centre-cropped to 16:9, resized to 800 × 450, JPEG quality 82, progressive.
-Total weight is roughly 0.8 MB for all seven.
+Total weight is roughly 1.6 MB for all fourteen.
 
 ## Replacing them
 

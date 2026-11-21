@@ -15,10 +15,13 @@ mobile-first, lightweight and fast.
   (Alt+T / Alt+D remain as accelerators).
 - **Organisation Admin theme:** one fixed cool-charcoal theme, independent of the
   light theme allocation and Dark Mode.
-- **Photographic content cards:** real Papua New Guinea photographs from Wikimedia
-  Commons, credited in-app under *Photo credits*; administrative cards stay
+- **Photographic content cards:** fifteen Papua New Guinea photographs from
+  Wikimedia Commons, assigned per card so a page does not repeat one image across
+  a grid; credited in-app under *Photo credits*. Administrative cards stay
   text-only. Replace with IGIFY's own photography when available
   (`docs/SAMPLE-IMAGES.md`).
+- **Inline SVG icons:** the interface uses a drawn 24 px icon set instead of
+  font-dependent Unicode symbols, so icons render identically on every device.
 - **Member public news:** public news and announcements remain visible in the
   member workspace.
 - **Collapsible sidebar:** an icon rail on desktop with hover/focus labels; an

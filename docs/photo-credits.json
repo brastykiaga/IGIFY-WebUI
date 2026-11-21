@@ -61,5 +61,68 @@
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
     "source": "https://commons.wikimedia.org/wiki/File:Student_Warrior_Dancer_from_Papua_New_Guinea.jpg",
     "bytes": 104722
+  },
+  "town": {
+    "file": "card-town.jpg",
+    "title": "Kundiawa (5987240894).jpg",
+    "creator": "eGuide Travel",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Kundiawa_(5987240894).jpg",
+    "bytes": 129783
+  },
+  "school": {
+    "file": "card-school.jpg",
+    "title": "Pacific Partnership 2025 Multinational Band Perform at Lea High School in Lae, Papua New Guinea, July 2025 (9234604).jpg",
+    "creator": "U.S. Navy photo by Petty Officer 3rd Class Adriana Immormino",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Pacific_Partnership_2025_Multinational_Band_Perform_at_Lea_High_School_in_Lae,_Papua_New_Guinea,_July_2025_(9234604).jpg",
+    "bytes": 78814
+  },
+  "landscape": {
+    "file": "card-landscape.jpg",
+    "title": "Papua New Guinea (5986599443).jpg",
+    "creator": "eGuide Travel",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Papua_New_Guinea_(5986599443).jpg",
+    "bytes": 92922
+  },
+  "festival": {
+    "file": "card-festival.jpg",
+    "title": "Tamiok Strike strengthens bonds between Wisconsin Guard, Papua New Guinea (8004064).jpg",
+    "creator": "Unknown",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Tamiok_Strike_strengthens_bonds_between_Wisconsin_Guard,_Papua_New_Guinea_(8004064).jpg",
+    "bytes": 136927
+  },
+  "garden": {
+    "file": "card-garden.jpg",
+    "title": "Gardens (6348365309).jpg",
+    "creator": "eGuide Travel",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Gardens_(6348365309).jpg",
+    "bytes": 148088
+  },
+  "performance": {
+    "file": "card-performance.jpg",
+    "title": "MRF-D 24 3- U S Marines, Sailors visit Papua New Guinea primary school during HADR exercise (8391850).jpg",
+    "creator": "U.S. Marine Corps photo by Cpl. Migel Reynosa",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:MRF-D_24_3-_U_S_Marines,_Sailors_visit_Papua_New_Guinea_primary_school_during_HADR_exercise_(8391850).jpg",
+    "bytes": 100183
+  },
+  "dance": {
+    "file": "card-dance.jpg",
+    "title": "USCGC Oliver Henry (WPC 1140) crew spends time in community in Papua New Guinea (7373479).jpg",
+    "creator": "Unknown",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:USCGC_Oliver_Henry_(WPC_1140)_crew_spends_time_in_community_in_Papua_New_Guinea_(7373479).jpg",
+    "bytes": 133640
   }
 }

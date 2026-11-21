@@ -2,6 +2,7 @@ import './style.css'
 import photoCredits from '../docs/photo-credits.json'
 import { store } from './data/index.js'
 import { CARD_LINKS, findRecord, TYPE_LABELS } from './content/catalogue.js'
+import { iconSvg, NAV_ICONS } from './icons.js'
 import { parseRoute, routeHash } from './router.js'
 
 // ── Configuration ─────────────────────────────────────────────────────────
@@ -105,17 +106,9 @@ function saveState() {
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────
+// Drawn inline (see icons.js) rather than using font-dependent dingbats.
 
-const icon = (name) => ({
-  Home: '⌂', Discover: '⌕', Learn: '▤', 'Community & Events': '♧', 'Latest News': '▣',
-  'Listen & Watch': '♫', 'About IGIFY': 'ⓘ', 'My Profile': '◉',
-  'Continue Learning': '▷', 'Saved Resources': '☆', Messages: '✉', 'My Groups': '♧',
-  Overview: '▦', 'Organisation Profile': '▤', Members: '♙', Content: '▧', Events: '▣',
-  Resources: '▤', Reports: '▥', Dashboard: '▦', 'Users & Identity': '♙',
-  Organisations: '▧', 'Content & Editorial': '▤', 'Community & Safety': '♧',
-  'Modules & Services': '▦', 'Appearance & Interface': '◐', 'Platform & System': '⚙',
-  'Audit & Activity': '≡',
-}[name] || '•')
+const icon = (name) => iconSvg(NAV_ICONS[name] || 'dot')
 
 // ── Notifications ─────────────────────────────────────────────────────────
 
@@ -136,59 +129,60 @@ function notify(message) {
 // NOTE: these are generic sample photographs (see public/images/README.md).
 // Replace them with IGIFY's own provincial photographs before public use.
 const CARD_IMAGE_BY_TITLE = {
-  // News and announcements
+  // News and official notices
   'Featured story': 'news',
-  'Community update': 'news',
-  'Education and opportunity': 'news',
   'IGIFY announcements': 'news',
-  'World trending': 'news',
+  'Community update': 'town',
+  'Community announcements': 'town',
+  'Organisation notices': 'town',
+  'Local services': 'community',
+  'Community noticeboard': 'town',
+  'History & Archives': 'town',
 
-  // Learning
+  // Education
   'Learning spotlight': 'learn',
   Learn: 'learn',
-  'Learning opportunities': 'learn',
   'Study resources': 'learn',
-  'Exam preparation': 'learn',
-  'Digital skills': 'learn',
   'Digital library': 'learn',
-  'Learning events': 'learn',
-  'Educational video': 'learn',
   'Your learning': 'learn',
+  'Last lesson': 'learn',
   'Saved resources': 'learn',
-
-  // Community
-  'Community highlight': 'community',
-  'Community trending': 'community',
-  'Community & Events': 'community',
-  'Community announcements': 'community',
-  'Local initiatives': 'community',
-  'Upcoming events': 'community',
-  'Organisation updates': 'community',
-  'Public group information': 'community',
-  'Community noticeboard': 'community',
-  'Community activity': 'community',
-  'Local services': 'community',
-  'Organisation notices': 'community',
-  'History & Archives': 'community',
-  Services: 'community',
+  'Saved lessons': 'learn',
+  'Education and opportunity': 'school',
+  'Exam preparation': 'school',
+  'Learning events': 'school',
+  'Educational video': 'school',
+  'Recent activity': 'school',
+  'Saved articles': 'school',
 
   // Discovery
   Discover: 'discover',
   'Search IGIFY': 'discover',
+  'World trending': 'landscape',
+  'Learning opportunities': 'landscape',
 
-  // Skills and faith
+  // Skills, faith, community
   'Skills & Farming': 'farming',
   'Faith & Family': 'faith',
   'Faith & Family events': 'faith',
   'Faith & Family learning': 'faith',
+  'Community highlight': 'festival',
+  'Community trending': 'community',
+  'Community & Events': 'festival',
+  'Local initiatives': 'community',
+  'Upcoming events': 'festival',
+  'Organisation updates': 'town',
+  'Public group information': 'garden',
+  Services: 'community',
+  'Community activity': 'garden',
 
   // Media
   'Listen & Watch': 'media',
   'Radio stations': 'media',
-  'Music discovery': 'media',
-  'Recorded audio': 'media',
   'Television channels': 'media',
-  'Video library': 'media',
+  'Music discovery': 'dance',
+  'Recorded audio': 'performance',
+  'Video library': 'performance',
 }
 
 function imageFor(title) {
@@ -622,7 +616,7 @@ function orgOverview() {
       <div class="stat"><span>Upcoming events</span><b>4</b><small>Illustrative sample</small></div>
     </div>
     <section class="panel">
-      <div class="panel-head"><h2>Overview</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Overview</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Create</button></div>
       <div class="feature-grid">
         ${card('Pending tasks', 'Your organisation’s pending tasks.')}
         ${card('Recent activity', 'Recent content and event activity.')}
@@ -669,7 +663,7 @@ function orgContent() {
       <div class="section-title"><h2>Content</h2><p>Prepare and submit organisation content.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Submissions</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Submissions</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Create</button></div>
       <div class="feature-grid">
         ${card('Prepare content', 'Prepare organisation content for submission.')}
         ${card('Publishing', 'Publishing approval remains with the authorised editorial process.')}
@@ -688,7 +682,7 @@ function orgEvents() {
       <div class="section-title"><h2>Events</h2><p>Prepare and manage organisation event information.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Events</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Events</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Create</button></div>
       <div class="feature-grid">
         ${card('Manage events', 'Prepare and manage organisation event information.')}
         ${card('Visibility', 'Public visibility follows publishing and moderation rules.')}
@@ -707,7 +701,7 @@ function orgResources() {
       <div class="section-title"><h2>Resources</h2><p>Manage or submit organisation resources within assigned permissions.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Resources</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Resources</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Create</button></div>
       <div class="feature-grid">
         ${card('Manage resources', 'Manage organisation resources.')}
         ${card('Permissions', 'Within your assigned permissions.')}
@@ -757,7 +751,7 @@ function adminDashboard() {
 function adminUsersIdentity() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Users &amp; Identity</h2><button class="primary" data-action="create">＋ Register user</button></div>
+      <div class="panel-head"><h2>Users &amp; Identity</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Register user</button></div>
       <div class="feature-grid">
         ${card('User directory', 'User directory and profile management.')}
         ${card('Registration review', 'Registration and account review.')}
@@ -768,7 +762,7 @@ function adminUsersIdentity() {
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Created in this prototype</h2></div>
-      ${createdList('users', 'No users registered in this prototype yet. Use ＋ Register user.')}
+      ${createdList('users', 'No users registered in this prototype yet. Use the Register user button.')}
     </section>
   `
 }
@@ -776,7 +770,7 @@ function adminUsersIdentity() {
 function adminOrganisations() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Organisations</h2><button class="primary" data-action="create">＋ Register organisation</button></div>
+      <div class="panel-head"><h2>Organisations</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Register organisation</button></div>
       <div class="feature-grid">
         ${card('Organisation registration', 'Organisation registration and approval.')}
         ${card('Organisation profiles', 'Organisation profiles and records.')}
@@ -795,7 +789,7 @@ function adminOrganisations() {
 function adminContentEditorial() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Content &amp; Editorial</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Content &amp; Editorial</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Create</button></div>
       <div class="feature-grid">
         ${card('Publishing', 'Content publishing and approval.')}
         ${card('Homepage placement', 'Homepage featured and editorial placement.')}
@@ -822,7 +816,7 @@ function adminContentEditorial() {
 function adminCommunitySafety() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Community &amp; Safety</h2><button class="primary" data-action="create">＋ Create group</button></div>
+      <div class="panel-head"><h2>Community &amp; Safety</h2><button class="primary" data-action="create">${iconSvg('plus', 14)} Create group</button></div>
       <div class="feature-grid">
         ${card('Groups', 'Groups and membership oversight.')}
         ${card('Moderation', 'Discussion and comment moderation.')}
@@ -1034,7 +1028,7 @@ function modalShell(title, bodyHtml, footerHtml = '') {
     <div class="modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
       <div class="modal-head">
         <h2>${escapeHtml(title)}</h2>
-        <button class="icon-btn" data-action="close-modal" aria-label="Close">✕</button>
+        <button class="icon-btn" data-action="close-modal" aria-label="Close">${iconSvg('close', 18)}</button>
       </div>
       <div class="modal-body">${bodyHtml}</div>
       ${footerHtml ? `<div class="modal-foot">${footerHtml}</div>` : ''}
@@ -1186,7 +1180,7 @@ function detailView(item, page) {
     .join('')
 
   return `<div class="detail-wrap">
-    <button class="back-link" data-action="detail-back">← Back to ${escapeHtml(page)}</button>
+    <button class="back-link" data-action="detail-back">${iconSvg('arrowLeft', 16)} Back to ${escapeHtml(page)}</button>
     <article class="detail">
       ${item.image ? `<div class="detail-media"><img src="${escapeHtml(item.image)}" alt="" /></div>` : ''}
       <div class="detail-content">
@@ -1232,7 +1226,7 @@ function render() {
   // expand control, because a native select cannot be rendered as an icon.
   const workspaceControl =
     wide && state.collapsed
-      ? '<button class="rail-btn" data-action="expand-sidebar" title="Change workspace" aria-label="Change workspace">▦</button>'
+      ? `<button class="rail-btn" data-action="expand-sidebar" title="Change workspace" aria-label="Change workspace">${iconSvg('grid', 18)}</button>`
       : [
           '<div class="env-label">WORKSPACE</div>',
           '<select id="environment" aria-label="Choose workspace">',
@@ -1264,16 +1258,16 @@ function render() {
       <main class="main">
         ${state.offline ? '<div class="offline-banner show">● Offline — content served from local cache</div>' : ''}
         <header class="topbar">
-          <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">☰</button>
+          <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">${iconSvg('menu', 20)}</button>
           <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}${record ? ` <span>/</span> ${escapeHtml(record.title)}` : ''}</div>
           <div class="top-actions">
             <div class="search" role="search" aria-label="Search IGIFY">
               <span>⌕</span>
               <input id="search" placeholder="Search IGIFY" value="${escapeHtml(state.search)}" />
             </div>
-            <button class="icon-btn bell" data-action="notifications" title="Notifications" aria-label="Notifications${unreadCount() ? ` (${unreadCount()} unread)` : ''}">♧${unreadCount() ? `<span class="badge">${unreadCount()}</span>` : ''}</button>
+            <button class="icon-btn bell" data-action="notifications" title="Notifications" aria-label="Notifications${unreadCount() ? ` (${unreadCount()} unread)` : ''}">${iconSvg('bell', 18)}${unreadCount() ? `<span class="badge">${unreadCount()}</span>` : ''}</button>
             <button class="profile" data-action="profile" aria-label="Account">${initial(state.profile.name)}</button>
-            <button class="icon-btn" data-action="theme-settings" title="Appearance &amp; themes">◐</button>
+            <button class="icon-btn" data-action="theme-settings" title="Appearance &amp; themes">${iconSvg('sun', 18)}</button>
           </div>
         </header>
         <div class="page-wrap">
@@ -1287,7 +1281,7 @@ function render() {
                    <h1>${state.page === 'Home' ? e.title : escapeHtml(state.page)}</h1>
                    <p>${escapeHtml(e.subtitle)}</p>`}
             </div>
-            ${state.env === 'admin' && !record ? '<button class="primary create-top" data-action="create">＋ Create</button>' : ''}
+            ${state.env === 'admin' && !record ? `<button class="primary create-top" data-action="create">${iconSvg('plus', 14)} Create</button>` : ''}
           </div>
           ${record ? detailView(record, state.page) : contentFor(state.env, state.page)}
           <footer>
@@ -1375,7 +1369,7 @@ function render() {
         go({ env: 'org', page: 'Overview' })
         notify('Organisation Admin preview — fixed theme applied.')
       } else if (a === 'close-modal') {
-        // Ignore clicks on the dialog body; only the overlay or the ✕ button closes.
+        // Ignore clicks on the dialog body; only the overlay or the ${iconSvg('close', 18)} button closes.
         if (b.classList.contains('modal-overlay') && ev.target.closest('.modal')) return
         closeModal()
       } else if (a === 'save-profile') {
