@@ -394,14 +394,17 @@ same host path.
 | Local adapter (`src/data/local.js`) | Implemented, used by the UI, covered by checks |
 | Data-layer seam (`src/data/index.js`) | Implemented; selects the local adapter |
 | Offline outbox (`src/data/outbox.js`) | Implemented: persistence, ordering, backoff, replay |
-| HTTP adapter (`src/data/http.js`) | Implemented against this contract; **not yet wired into the UI** |
+| HTTP adapter (`src/data/http.js`) | Implemented against this contract and **selected at build time** via `VITE_API_BASE_URL` |
 | Mock server (`scripts/mock-api.mjs`) | Implemented; subset of this contract |
 | Adapter checks (`scripts/test-http-store.mjs`) | 20 checks passing, including offline drain and replay |
 
-Wiring the HTTP adapter into the interface requires making the call sites await
-the store; that is the next frontend task and does not depend on backend
-decisions. It has deliberately not been done yet so the working prototype is not
-destabilised by an async refactor in the same step as the adapter's introduction.
+The interface now awaits the store, so both adapters are interchangeable: the
+local one resolves immediately and the HTTP one resolves when its request
+completes. Selection happens at build time, and a build has been verified to
+include the HTTP adapter only when `VITE_API_BASE_URL` is set.
+
+The HTTP path has been exercised against `scripts/mock-api.mjs`, not against a
+real server, and it has not yet been run in a browser with a live backend.
 
 ---
 

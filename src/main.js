@@ -57,13 +57,54 @@ const state = {
   modal: null, // null | 'profile' | 'notifications' | 'create' | 'create-form' | 'credits'
   createType: null, // key of CREATE_TYPES while the create form is open
   detail: null, // { type, id } when a record detail screen is open
-  profile: store.getProfile(),
-  notifications: store.listNotifications(),
-  items: store.allRecords(),
-  audit: store.listAudit(),
-  services: store.listServiceOverrides(),
-  orgProfile: store.getOrgProfile(),
+  // Filled by hydrate(): the local adapter returns them immediately, the HTTP
+  // adapter after its first request.
+  profile: { name: 'Guest user', role: 'Registered member', kyc: 'KYC pending' },
+  notifications: [],
+  items: {},
+  audit: [],
+  services: {},
+  orgProfile: { name: '', about: '' },
 }
+
+/** Pull the current data set from whichever store is configured. */
+async function hydrate() {
+  const [profile, notifications, items, audit, services, orgProfile] = await Promise.all([
+    store.getProfile(),
+    store.listNotifications(),
+    store.allRecords(),
+    store.listAudit ? store.listAudit() : [],
+    store.listServiceOverrides ? store.listServiceOverrides() : {},
+    store.getOrgProfile ? store.getOrgProfile() : { name: '', about: '' },
+  ])
+  Object.assign(state, { profile, notifications, items, audit, services, orgProfile })
+}
+
+async function start() {
+  try {
+    await hydrate()
+    // Flush anything queued while offline, then refresh once.
+    if (typeof store.sync === 'function' && store.kind !== 'local') {
+      await store.sync()
+      await hydrate()
+    }
+  } catch (err) {
+    // Offline first run with no cache: render what we have rather than nothing.
+    console.error('IGIFY: initial data load failed', err)
+  }
+  render()
+}
+
+window.addEventListener('online', async () => {
+  if (typeof store.sync !== 'function' || store.kind === 'local') return
+  try {
+    await store.sync()
+    await hydrate()
+    render()
+  } catch (err) {
+    /* still offline; the outbox keeps the writes */
+  }
+})
 
 // A shared or reloaded URL wins over the last visited page.
 const initialRoute = parseRoute(window.location.hash, environments)
@@ -1152,8 +1193,8 @@ function unreadCount() {
   return state.notifications.filter((n) => !n.read).length
 }
 
-function addNotification(title, body) {
-  state.notifications = store.addNotification({ title, body })
+async function addNotification(title, body) {
+  state.notifications = await store.addNotification({ title, body })
 }
 
 function formatTime(ts) {
@@ -1283,7 +1324,7 @@ function closeModal() {
   render()
 }
 
-function saveProfile() {
+async function saveProfile() {
   const input = document.querySelector('#profile-name')
   const name = (input?.value || '').trim()
   if (!name) {
@@ -1291,13 +1332,13 @@ function saveProfile() {
     input?.focus()
     return
   }
-  state.profile = store.updateProfile({ name })
+  state.profile = await store.updateProfile({ name })
   state.modal = null
   render()
   notify('Profile saved on this device.')
 }
 
-function submitCreate() {
+async function submitCreate() {
   const t = CREATE_TYPES[state.createType]
   if (!t) return
   const titleEl = document.querySelector('#create-title')
@@ -1309,10 +1350,10 @@ function submitCreate() {
     return
   }
   const detail = (detailEl?.value || '').trim()
-  store.createRecord(t.collection, { title, detail, status: t.status, actor: state.profile.name })
-  state.items = store.allRecords()
-  state.audit = store.listAudit()
-  addNotification(`${t.label} saved`, `${title} — ${(STATUS_LABELS[t.status] || t.status).toLowerCase()}.`)
+  await store.createRecord(t.collection, { title, detail, status: t.status, actor: state.profile.name })
+  state.items = await store.allRecords()
+  state.audit = await store.listAudit()
+  await addNotification(`${t.label} saved`, `${title} — ${(STATUS_LABELS[t.status] || t.status).toLowerCase()}.`)
 
   // Stay inside the Organisation Admin workspace for its own content and events.
   const orgTarget = state.env === 'org' && (state.createType === 'content' || state.createType === 'event')
@@ -1601,7 +1642,7 @@ function render() {
   const nav = e.nav
     .map(
       (n) =>
-        `<button class="nav-link ${state.page === n ? 'active' : ''}" data-page="${escapeHtml(n)}" data-label="${escapeHtml(n)}" aria-pressed="${state.page === n}"><span>${icon(n)}</span><label>${escapeHtml(n)}</label></button>`
+        `<button class="nav-link ${state.page === n ? 'active' : ''}" data-page="${escapeHtml(n)}" data-label="${escapeHtml(n)}" aria-pressed="${state.page === n}" aria-current="${state.page === n ? 'page' : 'false'}"><span>${icon(n)}</span><label>${escapeHtml(n)}</label></button>`
     )
     .join('')
 
@@ -1630,6 +1671,7 @@ function render() {
         ].join('')
 
   document.querySelector('#app').innerHTML = `
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="app-shell ${state.sidebar ? '' : 'sidebar-hidden'} ${wide && state.collapsed ? 'sidebar-collapsed' : ''}">
       ${!wide && state.sidebar ? '<div class="drawer-backdrop" data-action="sidebar" aria-hidden="true"></div>' : ''}
       <aside class="sidebar" aria-label="Workspace navigation">
@@ -1647,7 +1689,7 @@ function render() {
           Prototype environment <small>v1.0 · sample data</small>
         </div>
       </aside>
-      <main class="main">
+      <main class="main" id="main-content" tabindex="-1">
         ${state.offline ? '<div class="offline-banner show">● Offline — content served from local cache</div>' : ''}
         <header class="topbar">
           <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">${iconSvg('menu', 20)}</button>
@@ -1655,7 +1697,7 @@ function render() {
           <div class="top-actions">
             <div class="search" role="search" aria-label="Search IGIFY">
               ${iconSvg('search', 16)}
-              <input id="search" placeholder="Search IGIFY" value="${escapeHtml(state.search)}" />
+              <input id="search" aria-label="Search IGIFY" placeholder="Search IGIFY" value="${escapeHtml(state.search)}" />
             </div>
             <button class="icon-btn bell" data-action="notifications" title="Notifications" aria-label="Notifications${unreadCount() ? ` (${unreadCount()} unread)` : ''}">${iconSvg('bell', 18)}${unreadCount() ? `<span class="badge">${unreadCount()}</span>` : ''}</button>
             <button class="profile" data-action="profile" aria-label="Account">${initial(state.profile.name)}</button>
@@ -1709,7 +1751,7 @@ function render() {
   })
 
   document.querySelectorAll('[data-action]').forEach((b) => {
-    b.addEventListener('click', (ev) => {
+    b.addEventListener('click', async (ev) => {
       const a = b.dataset.action
       if (a === 'sidebar') {
         if (window.matchMedia('(min-width: 700px)').matches) {
@@ -1755,9 +1797,9 @@ function render() {
       } else if (a === 'open-service') {
         go({ env: state.env, page: state.page, detail: { type: 'service', id: b.dataset.id } })
       } else if (a === 'service-toggle') {
-        store.setServiceStatus(b.dataset.id, b.dataset.to, { actor: state.profile.name })
-        state.services = store.listServiceOverrides()
-        state.audit = store.listAudit()
+        await store.setServiceStatus(b.dataset.id, b.dataset.to, { actor: state.profile.name })
+        state.services = await store.listServiceOverrides()
+        state.audit = await store.listAudit()
         render()
         notify(`Service ${b.dataset.to}.`)
       } else if (a === 'open-audit') {
@@ -1773,19 +1815,19 @@ function render() {
           titleEl?.focus()
           return
         }
-        store.updateRecord(b.dataset.collection, b.dataset.id, {
+        await store.updateRecord(b.dataset.collection, b.dataset.id, {
           title,
           detail: (detailEl?.value || '').trim(),
         })
-        state.items = store.allRecords()
-        state.audit = store.listAudit()
+        state.items = await store.allRecords()
+        state.audit = await store.listAudit()
         render()
         notify('Draft saved.')
       } else if (a === 'record-transition') {
         const to = b.dataset.to
         const note = (document.querySelector('#record-note')?.value || '').trim()
         try {
-          store.transitionRecord(b.dataset.collection, b.dataset.id, {
+          await store.transitionRecord(b.dataset.collection, b.dataset.id, {
             to,
             actor: state.profile.name,
             note,
@@ -1794,9 +1836,9 @@ function render() {
           notify(err.message || 'That change is not allowed.')
           return
         }
-        state.items = store.allRecords()
-        state.audit = store.listAudit()
-        addNotification(`Record ${STATUS_LABELS[to] || to}`, note || `Status changed to ${STATUS_LABELS[to] || to}.`)
+        state.items = await store.allRecords()
+        state.audit = await store.listAudit()
+        await addNotification(`Record ${STATUS_LABELS[to] || to}`, note || `Status changed to ${STATUS_LABELS[to] || to}.`)
         render()
         notify(`Record marked ${(STATUS_LABELS[to] || to).toLowerCase()}.`)
       } else if (a === 'org-profile-edit') {
@@ -1811,8 +1853,8 @@ function render() {
           nameEl?.focus()
           return
         }
-        state.orgProfile = store.updateOrgProfile({ name, about: (aboutEl?.value || '').trim() })
-        state.audit = store.listAudit()
+        state.orgProfile = await store.updateOrgProfile({ name, about: (aboutEl?.value || '').trim() })
+        state.audit = await store.listAudit()
         state.modal = null
         render()
         notify('Organisation profile saved.')
@@ -1837,13 +1879,13 @@ function render() {
         if (b.classList.contains('modal-overlay') && ev.target.closest('.modal')) return
         closeModal()
       } else if (a === 'save-profile') {
-        saveProfile()
+        await saveProfile()
       } else if (a === 'mark-all-read') {
-        state.notifications = store.markAllRead()
+        state.notifications = await store.markAllRead()
         render()
         notify('All notifications marked as read.')
       } else if (a === 'clear-notifications') {
-        state.notifications = store.clearNotifications()
+        state.notifications = await store.clearNotifications()
         render()
         notify('Notifications cleared.')
       } else if (a === 'choose-create') {
@@ -1855,7 +1897,7 @@ function render() {
         state.modal = 'create'
         render()
       } else if (a === 'submit-create') {
-        submitCreate()
+        await submitCreate()
       } else if (a === 'credits') {
         state.modal = 'credits'
         render()
@@ -1921,7 +1963,7 @@ function render() {
   }
 }
 
-render()
+start()
 
 // ── Keyboard shortcuts (accessibility) ────────────────────────────────────
 

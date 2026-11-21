@@ -5,21 +5,22 @@
  * imports localStorage directly. That is the seam where a backend replaces the
  * local adapter.
  *
- * ── Swapping to a real backend ────────────────────────────────────────────────
- * 1. Implement `createHttpStore()` in `src/data/http.js` exposing the same
- *    methods as `createLocalStore()` in `local.js`, but returning Promises.
- * 2. Select it here, for example:
+ * Selection is by build-time configuration:
  *
- *      const useRemote = Boolean(import.meta.env.VITE_API_BASE_URL)
- *      export const store = useRemote ? createHttpStore(import.meta.env.VITE_API_BASE_URL)
- *                                     : createLocalStore()
+ *   VITE_API_BASE_URL=https://igify.local/api npm run build
  *
- * 3. Make the call sites await (they already refresh from the store after each
- *    mutation, so the change is contained).
+ * With no variable set the local adapter is used, which is what the prototype
+ * demo runs on. With it set, the HTTP adapter from docs/API-CONTRACT.md is used
+ * and writes go through the offline outbox.
  *
- * Endpoints and payload shapes are specified in docs/API-CONTRACT.md.
+ * Both adapters implement the same interface. The local one is synchronous and
+ * the HTTP one returns Promises, so every call site awaits: awaiting a plain
+ * value costs nothing, and it keeps the two interchangeable.
  */
 
+import { createHttpStore } from './http.js'
 import { createLocalStore } from './local.js'
 
-export const store = createLocalStore()
+const baseUrl = import.meta.env.VITE_API_BASE_URL
+
+export const store = baseUrl ? createHttpStore(baseUrl) : createLocalStore()

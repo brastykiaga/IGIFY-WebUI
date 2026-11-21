@@ -50,8 +50,9 @@ mobile-first, lightweight and fast.
 - **Working local flows:** account/profile editing, a notifications inbox with an
   unread badge, and Create shortcuts (user, organisation, content, announcement,
   group, event) that save drafts and list them on the owning screen.
-- **Accessibility:** focus-visible states, ARIA labels, keyboard navigation,
-  Escape closes dialogs and the drawer.
+- **Accessibility:** focus-visible states, ARIA labels including `aria-current`
+  for the active page, a skip link, keyboard navigation, Escape closes dialogs
+  and the drawer, and transitions are disabled under `prefers-reduced-motion`.
 - **PWA:** manifest, service worker and generated icons (192, 512, maskable,
   Apple touch), copied verbatim from `public/`.
 - **Lightweight:** system font stack, roughly 51 KB of JavaScript (~13 KB
@@ -95,6 +96,13 @@ location / {
 Use the correct `root` for your deployment. If the app is hosted under a
 sub-path, set Vite's `base` option before building.
 
+To point the build at a backend that implements `docs/API-CONTRACT.md`:
+
+```bash
+VITE_API_BASE_URL=https://api.example/api npm run build
+```
+With the variable unset the app runs entirely on local storage.
+
 ## Data layer and backend readiness
 
 Screens never touch storage directly. Persistence sits behind
@@ -103,9 +111,9 @@ Screens never touch storage directly. Persistence sits behind
 - `local.js` — the adapter currently in use (localStorage), including a one-time
   migration of data written by older prototype versions.
 - `http.js` — an adapter implementing the same methods against
-  `docs/API-CONTRACT.md`, with optimistic writes through the outbox.
-  **Implemented and tested, not yet wired into the UI**; wiring requires the call
-  sites to await.
+  `docs/API-CONTRACT.md`, with optimistic writes through the outbox. It is
+  selected at build time: set `VITE_API_BASE_URL` and the bundled app talks to
+  that API; leave it unset and the local adapter is used.
 - `outbox.js` — queued writes with ordering, exponential backoff and replay
   after reconnect, de-duplicated by `clientId`.
 
@@ -121,6 +129,7 @@ node scripts/test-router.mjs           # route parsing and rejection checks
 node scripts/test-search.mjs           # search relevance and edge cases
 node scripts/test-workflow.mjs         # editorial status transitions and roles
 node scripts/test-store.mjs            # record lifecycle and store guards
+node scripts/test-assets.mjs           # production bundle, precache and icons
 node scripts/fetch-png-photos.mjs      # search Commons for card photography
 python scripts/build-contact-sheet.py  # labelled review sheet of candidates
 python scripts/adopt-photos.py         # crop and resize chosen photos

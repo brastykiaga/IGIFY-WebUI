@@ -202,6 +202,24 @@ export function createHttpStore(baseUrl, options = {}) {
       return request(`/audit/${id}`)
     },
 
+    /**
+     * Organisation profile and service overrides are prototype-only features
+     * that the current contract does not define endpoints for. They degrade
+     * rather than pretend: the profile comes from the session, and services
+     * show their catalogue defaults until the contract grows.
+     */
+    async getOrgProfile() {
+      const me = await request('/me')
+      return {
+        name: me.organisation?.name || me.displayName || 'Organisation',
+        about: me.organisation?.about || '',
+      }
+    },
+
+    async listServiceOverrides() {
+      return {}
+    },
+
     async allRecords() {
       const entries = await Promise.all(
         COLLECTIONS.map(async (collection) => [collection, await this.listRecords(collection)])
