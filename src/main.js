@@ -13,6 +13,13 @@ const defaultState = {
   search: '',
   toast: '',
   offline: false,
+  // Transient UI state (never persisted)
+  modal: null, // null | 'profile' | 'notifications' | 'create' | 'create-form'
+  createType: null, // key of CREATE_TYPES while the create form is open
+  // Persisted prototype data
+  profile: { name: 'Guest user', role: 'Registered member', kyc: 'KYC pending' },
+  notifications: [],
+  items: { users: [], organisations: [], content: [], announcements: [], groups: [], events: [] },
 }
 
 const themeNames = {
@@ -65,12 +72,21 @@ function loadState() {
 
 function saveState() {
   try {
-    const { toast, search, offline, ...persist } = state
+    const { toast, search, offline, modal, createType, ...persist } = state
     localStorage.setItem(STORAGE_KEY, JSON.stringify(persist))
   } catch (e) { /* ignore */ }
 }
 
 const state = loadState()
+
+// First run: seed a couple of demonstration notifications so the inbox is not empty.
+if (!Array.isArray(state.notifications) || state.notifications.length === 0) {
+  state.notifications = [
+    { id: 1, title: 'Welcome to IGIFY', body: 'Notifications are stored on this device in the prototype.', at: Date.now(), read: false },
+    { id: 2, title: 'Offline-first enabled', body: 'The app shell is cached and works without an internet connection.', at: Date.now(), read: false },
+  ]
+  saveState()
+}
 
 // ── Icons ─────────────────────────────────────────────────────────────────
 
@@ -344,7 +360,7 @@ function memberHome() {
   return `
     <section class="welcome">
       <span class="eyebrow">WELCOME BACK</span>
-      <h2>Your IGIFY space</h2>
+      <h2>${escapeHtml(state.profile.name)}</h2>
       <p>Pick up where you left off, keep track of your learning and stay connected with your community.</p>
     </section>
     <section class="section">
@@ -363,17 +379,22 @@ function memberHome() {
 }
 
 function memberProfile() {
+  const p = state.profile
   return `
     <section class="section">
       <div class="section-title"><h2>My Profile</h2><p>View and manage your permitted profile information.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Profile information</h2><button class="primary" data-action="demo">Edit profile</button></div>
-      <div class="feature-grid">
-        ${card('Account status', 'Your current account and verification state.')}
-        ${card('Personal details', 'View and update permitted profile information.')}
-        ${card('Privacy', 'Your private identity and verification information is not exposed publicly.')}
+      <div class="panel-head"><h2>Profile information</h2><button class="primary" data-action="profile">Edit profile</button></div>
+      <div class="profile-grid">
+        <div class="profile-field"><span class="meta-label">Display name</span><strong>${escapeHtml(p.name)}</strong></div>
+        <div class="profile-field"><span class="meta-label">Role</span><strong>${escapeHtml(p.role)}</strong></div>
+        <div class="profile-field"><span class="meta-label">Identity</span><strong>${escapeHtml(p.kyc)}</strong></div>
       </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Privacy</h2></div>
+      <p class="muted">Your private identity and verification information is not exposed publicly.</p>
     </section>
   `
 }
@@ -536,6 +557,10 @@ function orgContent() {
         ${card('Publishing', 'Publishing approval remains with the authorised editorial process.')}
       </div>
     </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Prepared in this prototype</h2></div>
+      ${createdList('content', 'No organisation content prepared yet.')}
+    </section>
   `
 }
 
@@ -550,6 +575,10 @@ function orgEvents() {
         ${card('Manage events', 'Prepare and manage organisation event information.')}
         ${card('Visibility', 'Public visibility follows publishing and moderation rules.')}
       </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Prepared in this prototype</h2></div>
+      ${createdList('events', 'No organisation events prepared yet.')}
     </section>
   `
 }
@@ -610,7 +639,7 @@ function adminDashboard() {
 function adminUsersIdentity() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Users &amp; Identity</h2><button class="primary" data-action="demo">Manage users</button></div>
+      <div class="panel-head"><h2>Users &amp; Identity</h2><button class="primary" data-action="create">＋ Register user</button></div>
       <div class="feature-grid">
         ${card('User directory', 'User directory and profile management.')}
         ${card('Registration review', 'Registration and account review.')}
@@ -619,13 +648,17 @@ function adminUsersIdentity() {
         ${card('User activity', 'User activity and history.')}
       </div>
     </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Created in this prototype</h2></div>
+      ${createdList('users', 'No users registered in this prototype yet. Use ＋ Register user.')}
+    </section>
   `
 }
 
 function adminOrganisations() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Organisations</h2><button class="primary" data-action="demo">Manage organisations</button></div>
+      <div class="panel-head"><h2>Organisations</h2><button class="primary" data-action="create">＋ Register organisation</button></div>
       <div class="feature-grid">
         ${card('Organisation registration', 'Organisation registration and approval.')}
         ${card('Organisation profiles', 'Organisation profiles and records.')}
@@ -634,13 +667,17 @@ function adminOrganisations() {
         ${card('Organisation status', 'Organisation status and review.')}
       </div>
     </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Created in this prototype</h2></div>
+      ${createdList('organisations', 'No organisations registered in this prototype yet.')}
+    </section>
   `
 }
 
 function adminContentEditorial() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Content &amp; Editorial</h2><button class="primary" data-action="demo">Manage content</button></div>
+      <div class="panel-head"><h2>Content &amp; Editorial</h2><button class="primary" data-action="create">＋ Create</button></div>
       <div class="feature-grid">
         ${card('Publishing', 'Content publishing and approval.')}
         ${card('Homepage placement', 'Homepage featured and editorial placement.')}
@@ -649,13 +686,25 @@ function adminContentEditorial() {
         ${card('Categories', 'Categories, tags and expiry.')}
       </div>
     </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Content drafted in this prototype</h2></div>
+      ${createdList('content', 'No content drafted in this prototype yet.')}
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Announcements drafted in this prototype</h2></div>
+      ${createdList('announcements', 'No announcements drafted in this prototype yet.')}
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Events drafted in this prototype</h2></div>
+      ${createdList('events', 'No events drafted in this prototype yet.')}
+    </section>
   `
 }
 
 function adminCommunitySafety() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Community &amp; Safety</h2><button class="primary" data-action="demo">Manage safety</button></div>
+      <div class="panel-head"><h2>Community &amp; Safety</h2><button class="primary" data-action="create">＋ Create group</button></div>
       <div class="feature-grid">
         ${card('Groups', 'Groups and membership oversight.')}
         ${card('Moderation', 'Discussion and comment moderation.')}
@@ -663,6 +712,10 @@ function adminCommunitySafety() {
         ${card('Notices', 'Community notices and announcements.')}
         ${card('Safety', 'Safety controls.')}
       </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Groups created in this prototype</h2></div>
+      ${createdList('groups', 'No groups created in this prototype yet.')}
     </section>
   `
 }
@@ -804,6 +857,183 @@ function contentFor(env, page) {
   return `<section class="panel"><div class="panel-head"><h2>${escapeHtml(page)}</h2><p class="muted">${escapeHtml(environments[env].label)} workspace · demonstration content</p></div></section>`
 }
 
+// ── Local prototype flows: profile, notifications, create ─────────────────
+
+const CREATE_TYPES = {
+  user: { label: 'Register a user', page: 'Users & Identity', collection: 'users', status: 'Pending review' },
+  organisation: { label: 'Register an organisation', page: 'Organisations', collection: 'organisations', status: 'Pending approval' },
+  content: { label: 'Create content', page: 'Content & Editorial', collection: 'content', status: 'Draft' },
+  announcement: { label: 'Publish an announcement', page: 'Content & Editorial', collection: 'announcements', status: 'Draft' },
+  group: { label: 'Create a community group', page: 'Community & Safety', collection: 'groups', status: 'Pending moderation' },
+  event: { label: 'Create an event', page: 'Content & Editorial', collection: 'events', status: 'Draft' },
+}
+
+function unreadCount() {
+  return state.notifications.filter((n) => !n.read).length
+}
+
+function addNotification(title, body) {
+  state.notifications.unshift({ id: Date.now() + Math.random(), title, body, at: Date.now(), read: false })
+  if (state.notifications.length > 20) state.notifications.length = 20
+}
+
+function formatTime(ts) {
+  try {
+    return new Date(ts).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  } catch (e) {
+    return ''
+  }
+}
+
+function initial(value) {
+  return escapeHtml(String(value || 'U').trim().slice(0, 1).toUpperCase() || 'U')
+}
+
+function createdList(collection, emptyText) {
+  const list = state.items[collection] || []
+  if (!list.length) return `<p class="muted">${escapeHtml(emptyText)}</p>`
+  return `<ul class="created-list">${list
+    .map(
+      (item) => `<li>
+        <div>
+          <strong>${escapeHtml(item.title)}</strong>
+          ${item.detail ? `<span>${escapeHtml(item.detail)}</span>` : ''}
+        </div>
+        <small>${escapeHtml(item.status)} · ${escapeHtml(formatTime(item.at))}</small>
+      </li>`
+    )
+    .join('')}</ul>`
+}
+
+function modalShell(title, bodyHtml, footerHtml = '') {
+  return `<div class="modal-overlay" data-action="close-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
+      <div class="modal-head">
+        <h2>${escapeHtml(title)}</h2>
+        <button class="icon-btn" data-action="close-modal" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">${bodyHtml}</div>
+      ${footerHtml ? `<div class="modal-foot">${footerHtml}</div>` : ''}
+    </div>
+  </div>`
+}
+
+function profileModal() {
+  const p = state.profile
+  const body = `
+    <div class="modal-avatar">${initial(p.name)}</div>
+    <label class="field-label" for="profile-name">Display name</label>
+    <input id="profile-name" class="control-input field" value="${escapeHtml(p.name)}" maxlength="60" />
+    <div class="profile-meta">
+      <div><span class="meta-label">Role</span><span>${escapeHtml(p.role)}</span></div>
+      <div><span class="meta-label">Identity</span><span>${escapeHtml(p.kyc)}</span></div>
+    </div>
+    <p class="muted">Prototype only — the backend enforces identity and verification.</p>
+  `
+  const foot = `<button class="outline" data-action="close-modal">Cancel</button><button class="primary" data-action="save-profile">Save profile</button>`
+  return modalShell('Account', body, foot)
+}
+
+function notificationsModal() {
+  const list = state.notifications
+  const body = list.length
+    ? `<ul class="notif-list">${list
+        .map(
+          (n) => `<li class="${n.read ? '' : 'unread'}">
+            <span class="notif-dot" aria-hidden="true"></span>
+            <div>
+              <strong>${escapeHtml(n.title)}</strong>
+              <p>${escapeHtml(n.body)}</p>
+              <small>${escapeHtml(formatTime(n.at))}</small>
+            </div>
+          </li>`
+        )
+        .join('')}</ul>`
+    : `<p class="muted">No notifications.</p>`
+  const foot = `<button class="outline" data-action="clear-notifications">Clear all</button><button class="primary" data-action="mark-all-read">Mark all read</button>`
+  return modalShell('Notifications', body, foot)
+}
+
+function createModal() {
+  const options = Object.entries(CREATE_TYPES)
+    .map(
+      ([key, t]) =>
+        `<button class="create-option" data-action="choose-create" data-type="${key}"><strong>${escapeHtml(t.label)}</strong></button>`
+    )
+    .join('')
+  return modalShell(
+    'Create',
+    `<p class="muted">Create a new item. It is saved on this device for the prototype.</p><div class="create-grid">${options}</div>`
+  )
+}
+
+function createFormModal() {
+  const t = CREATE_TYPES[state.createType]
+  if (!t) return createModal()
+  const body = `
+    <label class="field-label" for="create-title">Title</label>
+    <input id="create-title" class="control-input field" maxlength="90" placeholder="${escapeHtml(t.label)}" />
+    <label class="field-label" for="create-detail">Details (optional)</label>
+    <textarea id="create-detail" class="control-input field" rows="3" maxlength="300"></textarea>
+    <p class="muted">Saved as <strong>${escapeHtml(t.status)}</strong> and listed under ${escapeHtml(t.page)}.</p>
+  `
+  const foot = `<button class="outline" data-action="back-to-create">Back</button><button class="primary" data-action="submit-create">Save</button>`
+  return modalShell(t.label, body, foot)
+}
+
+function closeModal() {
+  state.modal = null
+  state.createType = null
+  render()
+}
+
+function saveProfile() {
+  const input = document.querySelector('#profile-name')
+  const name = (input?.value || '').trim()
+  if (!name) {
+    notify('Enter a display name first.')
+    input?.focus()
+    return
+  }
+  state.profile.name = name
+  state.modal = null
+  saveState()
+  render()
+  notify('Profile saved on this device.')
+}
+
+function submitCreate() {
+  const t = CREATE_TYPES[state.createType]
+  if (!t) return
+  const titleEl = document.querySelector('#create-title')
+  const detailEl = document.querySelector('#create-detail')
+  const title = (titleEl?.value || '').trim()
+  if (!title) {
+    notify('Enter a title first.')
+    titleEl?.focus()
+    return
+  }
+  const detail = (detailEl?.value || '').trim()
+  if (!state.items[t.collection]) state.items[t.collection] = []
+  state.items[t.collection].unshift({ title, detail, status: t.status, at: Date.now() })
+  addNotification(`${t.label} saved`, `${title} — ${t.status.toLowerCase()}.`)
+
+  // Stay inside the Organisation Admin workspace for its own content and events.
+  const orgTarget = state.env === 'org' && (state.createType === 'content' || state.createType === 'event')
+  if (orgTarget) {
+    state.page = state.createType === 'content' ? 'Content' : 'Events'
+  } else {
+    state.env = 'admin'
+    state.page = t.page
+  }
+
+  state.modal = null
+  state.createType = null
+  saveState()
+  render()
+  notify(`${title} added to ${state.page}.`)
+}
+
 // ── Render ────────────────────────────────────────────────────────────────
 
 function render() {
@@ -858,8 +1088,8 @@ function render() {
               <span>⌕</span>
               <input id="search" placeholder="Search IGIFY" value="${escapeHtml(state.search)}" />
             </div>
-            <button class="icon-btn" data-action="notifications" title="Notifications">♧</button>
-            <button class="profile" data-action="profile">U</button>
+            <button class="icon-btn bell" data-action="notifications" title="Notifications" aria-label="Notifications${unreadCount() ? ` (${unreadCount()} unread)` : ''}">♧${unreadCount() ? `<span class="badge">${unreadCount()}</span>` : ''}</button>
+            <button class="profile" data-action="profile" aria-label="Account">${initial(state.profile.name)}</button>
             <button class="icon-btn" data-action="theme-settings" title="Appearance &amp; themes">◐</button>
           </div>
         </header>
@@ -879,6 +1109,10 @@ function render() {
           </footer>
         </div>
       </main>
+      ${state.modal === 'profile' ? profileModal() : ''}
+      ${state.modal === 'notifications' ? notificationsModal() : ''}
+      ${state.modal === 'create' ? createModal() : ''}
+      ${state.modal === 'create-form' ? createFormModal() : ''}
       <div class="toast ${state.toast ? 'show' : ''}" role="status" aria-live="polite">${escapeHtml(state.toast)}</div>
     </div>
   `
@@ -902,22 +1136,26 @@ function render() {
   })
 
   document.querySelectorAll('[data-action]').forEach((b) => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', (ev) => {
       const a = b.dataset.action
       if (a === 'sidebar') {
         state.sidebar = !state.sidebar
         saveState()
         render()
       } else if (a === 'create') {
-        notify('Create shortcut selected — workflow will be connected in a later implementation.')
+        state.modal = 'create'
+        state.createType = null
+        render()
       } else if (a === 'discover') {
         state.page = 'Discover'
         saveState()
         render()
       } else if (a === 'profile') {
-        notify('Profile menu demonstration')
+        state.modal = 'profile'
+        render()
       } else if (a === 'notifications') {
-        notify('No new demonstration notifications')
+        state.modal = 'notifications'
+        render()
       } else if (a === 'theme-settings') {
         notify('Theme settings opened — use the appearance dropdown below.')
       } else if (a === 'toggle-dark') {
@@ -925,11 +1163,44 @@ function render() {
         saveState()
         render()
         notify(state.dark ? 'Dark Mode on' : 'Dark Mode off')
+      } else if (a === 'close-modal') {
+        // Ignore clicks on the dialog body; only the overlay or the ✕ button closes.
+        if (b.classList.contains('modal-overlay') && ev.target.closest('.modal')) return
+        closeModal()
+      } else if (a === 'save-profile') {
+        saveProfile()
+      } else if (a === 'mark-all-read') {
+        state.notifications = state.notifications.map((n) => ({ ...n, read: true }))
+        saveState()
+        render()
+        notify('All notifications marked as read.')
+      } else if (a === 'clear-notifications') {
+        state.notifications = []
+        saveState()
+        render()
+        notify('Notifications cleared.')
+      } else if (a === 'choose-create') {
+        state.createType = b.dataset.type || null
+        state.modal = state.createType ? 'create-form' : 'create'
+        render()
+      } else if (a === 'back-to-create') {
+        state.createType = null
+        state.modal = 'create'
+        render()
+      } else if (a === 'submit-create') {
+        submitCreate()
       } else {
         notify('This is a prototype interaction; no live service is connected.')
       }
     })
   })
+
+  // Move focus into an open dialog for keyboard users.
+  const modalEl = document.querySelector('.modal')
+  if (modalEl) {
+    const field = modalEl.querySelector('input, textarea')
+    if (field) field.focus()
+  }
 
   const search = document.querySelector('#search')
   search.addEventListener('input', (ev) => {
@@ -994,6 +1265,10 @@ document.addEventListener('keydown', (e) => {
     notify(state.dark ? 'Dark Mode on' : 'Dark Mode off')
   }
   if (e.key === 'Escape') {
+    if (state.modal) {
+      closeModal()
+      return
+    }
     state.sidebar = true
     saveState()
     render()
