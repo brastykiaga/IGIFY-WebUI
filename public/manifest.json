@@ -1,0 +1,14 @@
+{
+  "name": "IGIFY WebUI",
+  "short_name": "IGIFY",
+  "description": "Local community platform for knowledge, learning and connection — offline-first",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f5f6",
+  "theme_color": "#292d32",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["education", "community", "utilities"],
+  "icons": []
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGIFY Platform Architecture</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; padding: 24px; background: #f4f5f6; color: #292d32; line-height: 1.5; }
+  h1 { font-size: 24px; margin-bottom: 8px; color: #292d32; }
+  h2 { font-size: 18px; margin-top: 28px; margin-bottom: 12px; color: #343a40; border-bottom: 1px solid #e3e5e7; padding-bottom: 4px; }
+  p { margin: 6px 0; }
+  .diagram { margin: 24px 0; }
+  .layer { border: 1px solid #292d32; border-radius: 8px; padding: 16px; margin-bottom: 14px; background: #fff; }
+  .layer h3 { margin: 0 0 10px 0; font-size: 15px; color: #fff; padding: 6px 10px; border-radius: 4px; }
+  .layer.public h3 { background: #292d32; }
+  .layer.nginx h3 { background: #454b52; }
+  .layer.backend h3 { background: #555b62; }
+  .layer.integration h3 { background: #626970; }
+  .layer.services h3 { background: #34383d; }
+  .layer.data h3 { background: #191c20; }
+  .layer.external h3 { background: #41464c; }
+  .items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .item { border: 1px solid #d7dade; border-radius: 6px; padding: 8px 12px; background: #f5f6f7; font-size: 13px; color: #292d32; }
+  .arrow { text-align: center; font-size: 16px; color: #777e86; margin: 4px 0; }
+  .note { font-size: 12px; color: #777e86; margin-top: 16px; padding: 12px; background: #f0f1f2; border-radius: 6px; border-left: 4px solid #343a40; }
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .service-item { font-size: 12px; padding: 6px 10px; background: #f5f6f7; border: 1px solid #e3e5e7; border-radius: 4px; color: #292d32; }
+  .existing { border-left: 3px solid #343a40; }
+  .proposed { border-left: 3px solid #626970; opacity: 0.85; }
+  .to-confirm { border-left: 3px solid #777e86; opacity: 0.7; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+  .badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 6px; background: #e3e5e7; color: #292d32; }
+</style>
+</head>
+<body>
+
+<h1>IGIFY Platform Architecture</h1>
+<p><strong>Version:</strong> Prototype v1.0 &nbsp;|&nbsp; <strong>Deployment:</strong> Local provincial (offline-first) &nbsp;|&nbsp; <strong>Web Server:</strong> NGINX (Docker)</p>
+
+<div class="diagram">
+
+  <!-- Layer 1: Frontend -->
+  <div class="layer public">
+    <h3>Layer 1 — Frontend: IGIFY WebUI (Vite Prototype)</h3>
+    <div class="items">
+      <div class="item">Public WebUI</div>
+      <div class="item">Registered Member WebUI</div>
+      <div class="item">Organisation Admin</div>
+      <div class="item">IGIFY Administrator</div>
+    </div>
+    <div style="margin-top:8px; font-size:12px; color:#777e86;">
+      Shared: design tokens, header/search, navigation patterns, common UI components, theme system (5 charcoal themes + Dark Mode)
+    </div>
+  </div>
+
+  <div class="arrow">▼ HTTPS / API calls</div>
+
+  <!-- Layer 2: NGINX -->
+  <div class="layer nginx">
+    <h3>Layer 2 — Reverse Proxy &amp; Static File Server: NGINX</h3>
+    <div class="items">
+      <div class="item">Serves static <code>dist/</code> (production build)</div>
+      <div class="item">Routes API requests to backend</div>
+      <div class="item">Docker container deployment</div>
+      <div class="item">Local provincial installation</div>
+    </div>
+  </div>
+
+  <div class="arrow">▼ Authenticated, authorised, validated requests</div>
+
+  <!-- Layer 3: Backend -->
+  <div class="layer backend">
+    <h3>Layer 3 — Central Backend API / Application Layer</h3>
+    <div class="items">
+      <div class="item">Authentication &amp; session</div>
+      <div class="item">Authorisation (security groups)</div>
+      <div class="item">Validation &amp; business rules</div>
+      <div class="item">Data access &amp; response handling</div>
+      <div class="item">Audit logging</div>
+    </div>
+    <div class="note"><strong>Security principle:</strong> Frontend visibility is not authorisation. The backend checks every protected operation.</div>
+  </div>
+
+  <div class="arrow">▼ Service requests</div>
+
+  <!-- Layer 4: Integration -->
+  <div class="layer integration">
+    <h3>Layer 4 — IGIFY Service Integration Layer</h3>
+    <div class="items">
+      <div class="item">Service Registry</div>
+      <div class="item">Connector Manager</div>
+      <div class="item">API Adapters</div>
+      <div class="item">Access Gateway</div>
+      <div class="item">Health Monitoring</div>
+      <div class="item">Event Handling</div>
+      <div class="item">Offline Coordination</div>
+      <div class="item">External Integrations</div>
+    </div>
+  </div>
+
+  <div class="arrow">▼ Connects to</div>
+
+  <!-- Layer 5: Services -->
+  <div class="layer services">
+    <h3>Layer 5 — Independent Backend Applications / Services</h3>
+    <div class="two-col">
+      <div>
+        <strong>Existing</strong>
+        <div class="services-grid">
+          <div class="service-item existing">MusicBrainz (music search)</div>
+          <div class="service-item existing">TV Streaming App</div>
+          <div class="service-item existing">AzuraCast (radio)</div>
+          <div class="service-item existing">FreshRSS (news feeds)</div>
+          <div class="service-item existing">Wallabag (read-it-later)</div>
+          <div class="service-item existing">StepBible (Bible study)</div>
+          <div class="service-item existing">Today-In-History</div>
+          <div class="service-item existing">Daily Quotes</div>
+          <div class="service-item existing">Daily Bread</div>
+          <div class="service-item existing">Archives (offline gov sites)</div>
+        </div>
+      </div>
+      <div>
+        <strong>Proposed</strong>
+        <div class="services-grid">
+          <div class="service-item proposed">School Management App</div>
+          <div class="service-item proposed">Church Management App</div>
+          <div class="service-item proposed">Video App</div>
+          <div class="service-item proposed">Music App</div>
+          <div class="service-item proposed">KADO (messaging)</div>
+          <div class="service-item proposed">IGIMart (marketplace)</div>
+          <div class="service-item proposed">Contact Management</div>
+        </div>
+        <div style="margin-top:10px;">
+          <strong>To confirm:</strong> PDF/Book Reader, Email Server
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">▼ Read/write</div>
+
+  <!-- Layer 6: Data -->
+  <div class="layer data">
+    <h3>Layer 6 — Data &amp; Storage Layer</h3>
+    <div class="items">
+      <div class="item">Local provincial database</div>
+      <div class="item">Offline content storage</div>
+      <div class="item">Synchronisation (when online)</div>
+      <div class="item">Backup &amp; recovery</div>
+    </div>
+  </div>
+
+  <div class="arrow">▼</div>
+
+  <!-- External -->
+  <div class="layer external">
+    <h3>External / Optional (Internet-dependent)</h3>
+    <div class="items">
+      <div class="item">Google Fonts (to be removed — offline-first)</div>
+      <div class="item">Remote service integrations</div>
+      <div class="item">Cloud sync (optional)</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note">
+  <strong>Key design principles:</strong>
+  <ul>
+    <li><strong>Offline-first:</strong> Public content and locally stored services remain useful without internet.</li>
+    <li><strong>One provincial deployment:</strong> Each installation serves its own province/state community.</li>
+    <li><strong>Independent services:</strong> New services register through the Service Integration Layer without frontend redesign.</li>
+    <li><strong>Backend enforcement:</strong> Authentication, authorisation, and validation happen server-side — never in the frontend.</li>
+    <li><strong>Production:</strong> Docker + NGINX serving static <code>dist/</code> output. Vite dev server is for development only.</li>
+  </ul>
+</div>
+
+</body>
+</html>

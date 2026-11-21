@@ -4,10 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#292d32" />
+    <meta name="description" content="IGIFY WebUI — Local community platform for knowledge, learning and connection" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>IGIFY — Discover. Learn. Connect.</title>
+    <link rel="manifest" href="/manifest.json" />
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      // Register service worker for offline-first support
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('IGIFY: Service Worker registered'))
+          .catch(() => { /* Service worker optional */ })
+      }
+    </script>
   </body>
 </html>
