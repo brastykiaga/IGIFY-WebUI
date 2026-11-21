@@ -190,12 +190,29 @@ function imageFor(title) {
   return key ? `/images/card-${key}.jpg` : null
 }
 
+/**
+ * Cards with no suitable photograph get a designed tile instead: a large icon
+ * and a short label on a restrained charcoal surface. This is deliberate
+ * design, not a missing image — currently the broadcast and audio cards, since
+ * no Papua New Guinea radio or television photography exists in the commons.
+ */
+const CARD_TILES = {
+  'Radio stations': { icon: 'radio', label: 'Radio' },
+  'Television channels': { icon: 'tv', label: 'Television' },
+  'Recorded audio': { icon: 'headphones', label: 'Audio' },
+}
+
 function card(title, desc, meta = 'Explore') {
-  const image = imageFor(title)
-  const media = image
-    ? `<div class="card-media"><img src="${image}" alt="" loading="lazy" decoding="async" /></div>`
-    : ''
-  return `<article class="content-card${image ? ' has-media' : ''}">${media}<div class="card-body"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p>${cardAction(title, meta)}</div></article>`
+  const tile = CARD_TILES[title]
+  const image = tile ? null : imageFor(title)
+
+  const media = tile
+    ? `<div class="card-media tile">${iconSvg(tile.icon, 40)}<span class="tile-label">${escapeHtml(tile.label)}</span></div>`
+    : image
+      ? `<div class="card-media"><img src="${image}" alt="" loading="lazy" decoding="async" /></div>`
+      : ''
+
+  return `<article class="content-card${media ? ' has-media' : ''}">${media}<div class="card-body"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p>${cardAction(title, meta)}</div></article>`
 }
 
 /**
