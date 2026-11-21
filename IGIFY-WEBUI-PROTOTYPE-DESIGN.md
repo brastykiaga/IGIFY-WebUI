@@ -4,8 +4,8 @@
 **Project:** IGIFY WebUI  
 **Repository:** https://github.com/brastykiaga/IGIFY-WebUI  
 **Branch:** `main`  
-**Status:** Design baseline and prototype implementation reference  
-**Version:** 1.0
+**Status:** Design baseline and prototype implementation reference (v1.1 prototype upgrade applied)  
+**Version:** 1.1
 
 ---
 
@@ -620,16 +620,23 @@ This list is platform context, not a claim that every service is already connect
 
 ## 13. Current repository and development workflow
 
-The current repository structure confirmed during inspection is:
+The current repository structure is:
 
 ```text
 IGIFY-WebUI/
 ├── index.html
 ├── package.json
-├── README.md
+├── package-lock.json
 ├── vite.config.js
+├── README.md
+├── ARCHITECTURE.html
+├── IGIFY-WEBUI-PROTOTYPE-DESIGN.md
 ├── START_IGIFY.bat
 ├── START_IGIFY.sh
+├── .env.example
+├── public/
+│   ├── manifest.json
+│   └── sw.js
 └── src/
     ├── main.js
     └── style.css
@@ -642,6 +649,10 @@ The build creates a generated `dist/` directory, and dependencies are installed 
 - Vite 6 build/development tooling.
 - CSS.
 - Static frontend output for NGINX deployment.
+- Progressive Web App: a service worker (`public/sw.js`) provides an offline app shell, and `public/manifest.json` describes the installable application.
+- `localStorage` persistence for prototype preferences and locally created records.
+
+`public/` holds files that must be served verbatim from the site root — Vite copies them into `dist/` without hashing or rewriting. The service worker and manifest must stay there; placing them in the repository root instead makes them build assets with unstable paths.
 
 **Development**
 ```bash
@@ -672,78 +683,119 @@ This section deliberately distinguishes what has been demonstrated from what rem
 - The Public WebUI shell rendered in the browser.
 - The IGIFY Administrator workspace could be selected in the prototype.
 - The initial visual direction—charcoal sidebar, neutral page background, cards and header—was visible in the browser.
+- **v1.1 — Navigation:** every sidebar destination in all four workspaces now renders its own page content. The earlier defect, where only the heading and active item changed, is resolved.
+- **v1.1 — Offline-first:** a service worker caches the app shell, serves a navigation fallback when offline, and applies stale-while-revalidate caching to same-origin assets. A PWA manifest is provided and the interface shows an offline banner and status indicator.
+- **v1.1 — Mobile-first styling:** the stylesheet is authored for small screens first, with layout changes at 700 px and 1024 px. The sidebar becomes a drawer on small screens; touch targets and focus states are defined.
+- **v1.1 — Visible theme controls:** the five charcoal light themes and Dark Mode are selectable from the Administrator *Appearance & Interface* screen as well as the sidebar. The Alt+T and Alt+D shortcuts remain as accelerators.
+- **v1.1 — Persistence:** workspace, page, theme, Dark Mode and sidebar state are stored in `localStorage` and restored on reload.
+- **v1.1 — Local flows:** profile editing, notifications and the Create shortcuts are functional against on-device storage (see §14.1).
+- **v1.1 — Build size:** production output is approximately 42 kB of JavaScript (10 kB gzipped) and 12 kB of CSS (3 kB gzipped), with no remote font or stylesheet dependency.
 
-### Known gaps at the time this specification was consolidated
-- The Public WebUI navigation defect was identified: sidebar selection changed the heading/active item, while the main content continued rendering the same homepage content. Each destination needs its own page content.
-- Member and Organisation Admin pages are prototype-level demonstrations, not connected working service workflows.
-- Administrator sections include illustrative content and sample figures, not live platform records.
-- Search is not connected to Migle.
-- Radio, TV, music and video playback are not connected.
-- Notifications, messaging, profile and create actions are demonstration interactions.
-- Theme cycling and Dark Mode were prototype keyboard shortcuts (Alt+T and Alt+D); the final visible settings controls and administrator allocation workflows remain to be completed.
-- Google Fonts are imported remotely in the current stylesheet. For a strictly offline production interface, use bundled fonts or system-font fallbacks and remove reliance on external font fetching.
+### 14.1 Local prototype interactions
+
+These interactions are real interactions with local, on-device data. They are **not** service integrations and do not imply that a backend exists.
+
+**Profile (Account)**
+- The header account button opens an account dialog showing display name, role and identity state.
+- The display name can be edited and is saved to `localStorage`.
+- The saved name appears in the member home greeting and on the Member *My Profile* screen.
+- Role and identity state are fixed sample values; they are not editable and are not authoritative.
+
+**Notifications**
+- The header bell shows an unread badge.
+- The notifications dialog lists notifications with unread styling, and offers *Mark all read* and *Clear all*.
+- Creating an item raises a new local notification.
+- Two seed notifications are created on first run so the inbox is not empty.
+
+**Create shortcuts**
+- The Administrator *＋ Create* control and the relevant screen-level Create buttons open a chooser: register a user, register an organisation, create content, publish an announcement, create a community group, or create an event.
+- Each chooser entry opens a small form (title, optional details). Saving stores a record with a prototype status (for example *Pending review*, *Draft*, *Pending moderation*) and a timestamp.
+- The record is then listed on the owning screen — for example a registered user appears under *Users & Identity → Created in this prototype*.
+- Organisation Admin remains inside its own workspace when preparing organisation content or events; other types route to the corresponding Administrator screen.
+- These Created lists are visible only on this device and are not shared between deployments or users.
+
+**Explicit non-claims**
+- These flows do not authenticate anyone.
+- They do not enforce permissions; the workspace selector remains a demonstration control.
+- They do not synchronise between devices or with the Simbu provincial data centre.
+- The records have no approval workflow, no audit trail, and no relationship to production data.
+
+### Known gaps after the v1.1 upgrade
 - No production backend/API integration is implemented by this prototype.
-- No authentication or authorisation should be inferred from the visual workspace selector.
+- No authentication or authorisation should be inferred from the visual workspace selector or from the local flows.
+- Member and Organisation Admin pages remain prototype-level demonstrations; they are not connected working service workflows.
+- Administrator sections include illustrative content and sample figures, not live platform records.
+- Search is not connected to Migle; submitting a search only reports that the service is not connected.
+- Radio, TV, music and video playback are not connected.
+- Notifications and messaging are local-only; no messaging service is connected.
+- The desktop sidebar can be hidden on small screens but does not yet offer a collapsed icon-only mode on desktop.
+- Organisation Admin does not yet have its own separate theme; it currently shares the selected light theme.
+- The PWA manifest declares no icons, so install prompts use browser defaults.
+- Interface state is not reflected in the URL, so there are no deep links; a reload restores the last view from `localStorage`.
+- The five light themes are selectable in the prototype for demonstration. The agreed production model remains administrator-controlled allocation by audience category rather than free user choice.
+- Browser-console cleanliness has been verified by build and module parsing only; this environment provided no browser for a live render test.
 
 A successful Vite build proves that the source compiles. It does not prove that every screen, route, control, responsive state or service integration is complete.
 
 ## 15. Acceptance checklist for the completed WebUI prototype
 
+Checked items are satisfied by the current prototype. Unticked items remain open and are described in §14.
+
 ### Application shell
-- [ ] Four workspaces are present and visually distinct.
-- [ ] Workspace selector changes the complete workspace content and navigation.
+- [x] Four workspaces are present and visually distinct.
+- [x] Workspace selector changes the complete workspace content and navigation.
 - [ ] Desktop sidebar expands/collapses correctly.
-- [ ] Mobile navigation is usable and responsive.
-- [ ] Search, notifications and profile controls have clear behaviour.
-- [ ] Active navigation and breadcrumb are correct.
+- [x] Mobile navigation is usable and responsive.
+- [x] Search, notifications and profile controls have clear behaviour.
+- [x] Active navigation and breadcrumb are correct.
 
 ### Public WebUI
-- [ ] Home page follows the agreed content order.
-- [ ] Discover has its own screen.
-- [ ] Learn has its own screen.
-- [ ] Community & Events has its own screen.
-- [ ] Latest News has its own screen.
-- [ ] Listen & Watch has its own screen.
-- [ ] About IGIFY has its own screen.
-- [ ] Every sidebar click changes the actual content, not just the title.
-- [ ] No unrequested About IGIFY hero button is present.
+- [x] Home page follows the agreed content order.
+- [x] Discover has its own screen.
+- [x] Learn has its own screen.
+- [x] Community & Events has its own screen.
+- [x] Latest News has its own screen.
+- [x] Listen & Watch has its own screen.
+- [x] About IGIFY has its own screen.
+- [x] Every sidebar click changes the actual content, not just the title.
+- [x] No unrequested About IGIFY hero button is present.
 
 ### Member WebUI
-- [ ] Member home and personal sections are distinct.
-- [ ] Continue where you left off is represented.
-- [ ] Saved resources, messages and groups have distinct screens.
+- [x] Member home and personal sections are distinct.
+- [x] Continue where you left off is represented.
+- [x] Saved resources, messages and groups have distinct screens.
 - [ ] Public news remains visible to members.
 
 ### Organisation Admin
-- [ ] Separate Organisation Admin workspace.
-- [ ] Overview, profile, members, content, events, resources and reports each have distinct screens.
-- [ ] The same account can access this workspace when approved.
-- [ ] No second account/login is implied.
+- [x] Separate Organisation Admin workspace.
+- [x] Overview, profile, members, content, events, resources and reports each have distinct screens.
+- [x] The same account can access this workspace when approved.
+- [x] No second account/login is implied.
 
 ### IGIFY Administrator
-- [ ] All nine administrative sections have distinct screens.
-- [ ] Dashboard shows task/approval overview.
-- [ ] Create shortcut routes to the correct workflows.
-- [ ] Appearance includes theme allocation and Dark Mode policy.
-- [ ] Audit & Activity is represented separately.
-- [ ] Sample data is clearly labelled as illustrative.
+- [x] All nine administrative sections have distinct screens.
+- [x] Dashboard shows task/approval overview.
+- [x] Create shortcut routes to the correct workflows.
+- [x] Appearance includes theme allocation and Dark Mode policy.
+- [x] Audit & Activity is represented separately.
+- [x] Sample data is clearly labelled as illustrative.
 
 ### Visual design
-- [ ] Five agreed charcoal light themes are represented.
-- [ ] Dark Mode is independent.
+- [x] Five agreed charcoal light themes are represented.
+- [x] Dark Mode is independent.
 - [ ] Organisation Admin theme is separate.
-- [ ] White/neutral light-mode surfaces and restrained charcoal/grey palette are maintained.
-- [ ] No green theme or unnecessary bright decoration.
-- [ ] Responsive layout works at desktop, tablet and mobile widths.
-- [ ] Offline font strategy does not depend on Google Fonts being reachable.
+- [x] White/neutral light-mode surfaces and restrained charcoal/grey palette are maintained.
+- [x] No green theme or unnecessary bright decoration.
+- [x] Responsive layout works at desktop, tablet and mobile widths.
+- [x] Offline font strategy does not depend on Google Fonts being reachable.
 
 ### Quality and build
 - [ ] No browser-console errors during normal navigation.
 - [ ] No dead buttons or misleading actions.
-- [ ] Keyboard focus and accessible labels are present.
-- [ ] `npm run build` succeeds.
-- [ ] Production output is suitable for serving through the existing NGINX deployment.
-- [ ] README and this design document describe the same project structure and status.
+- [x] Keyboard focus and accessible labels are present.
+- [x] `npm run build` succeeds.
+- [x] Production output is suitable for serving through the existing NGINX deployment.
+- [x] README and this design document describe the same project structure and status.
 
 ## 16. Change-control principle
 

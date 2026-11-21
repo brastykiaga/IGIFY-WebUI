@@ -9,9 +9,12 @@ A frontend-only demonstration of the four IGIFY user environments — offline-fi
 - **Visible theme controls:** 5 charcoal light themes + Dark Mode (keyboard shortcuts Alt+T / Alt+D still work)
 - **localStorage persistence:** Remembers theme, dark mode, sidebar state, and workspace across visits
 - **Offline/online status banner:** Shows when the device is offline
-- **Lightweight:** System font stack (no remote Google Fonts), ~30KB gzipped JavaScript
-- **Accessibility:** Focus-visible states, ARIA labels, keyboard navigation, Escape closes sidebar
-- **PWA manifest:** `manifest.json` for installable web app support
+- **Working local flows:** Account/profile editing, a notifications inbox with unread badge, and Create shortcuts (user, organisation, content, announcement, group, event) that save drafts and list them on the owning screen
+- **Lightweight:** System font stack (no remote Google Fonts), ~42 KB JavaScript (~10 KB gzipped)
+- **Accessibility:** Focus-visible states, ARIA labels, keyboard navigation, Escape closes dialogs and the sidebar
+- **PWA:** `public/manifest.json` and `public/sw.js`, copied verbatim into `dist/` by Vite
+
+> The profile, notification and create flows store data on the device only. They do not authenticate anyone, enforce permissions, or connect to a backend, and should not be read as production access control.
 
 ## Requirements
 - Node.js 20.19+ or 22.12+ (Node.js 22 LTS recommended)
