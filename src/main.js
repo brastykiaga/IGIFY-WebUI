@@ -115,8 +115,78 @@ function notify(message) {
 
 // ── Cards ─────────────────────────────────────────────────────────────────
 
+// Photographs for content cards. Titles not listed here render as plain text
+// cards, which is intentional for administrative and utility screens where an
+// image would add weight without meaning.
+// NOTE: these are generic sample photographs (see public/images/README.md).
+// Replace them with IGIFY's own provincial photographs before public use.
+const CARD_IMAGE_BY_TITLE = {
+  // News and announcements
+  'Featured story': 'news',
+  'Community update': 'news',
+  'Education and opportunity': 'news',
+  'IGIFY announcements': 'news',
+  'World trending': 'news',
+
+  // Learning
+  'Learning spotlight': 'learn',
+  Learn: 'learn',
+  'Learning opportunities': 'learn',
+  'Study resources': 'learn',
+  'Exam preparation': 'learn',
+  'Digital skills': 'learn',
+  'Digital library': 'learn',
+  'Learning events': 'learn',
+  'Educational video': 'learn',
+  'Your learning': 'learn',
+  'Saved resources': 'learn',
+
+  // Community
+  'Community highlight': 'community',
+  'Community trending': 'community',
+  'Community & Events': 'community',
+  'Community announcements': 'community',
+  'Local initiatives': 'community',
+  'Upcoming events': 'community',
+  'Organisation updates': 'community',
+  'Public group information': 'community',
+  'Community noticeboard': 'community',
+  'Community activity': 'community',
+  'Local services': 'community',
+  'Organisation notices': 'community',
+  'History & Archives': 'community',
+  Services: 'community',
+
+  // Discovery
+  Discover: 'discover',
+  'Search IGIFY': 'discover',
+
+  // Skills and faith
+  'Skills & Farming': 'farming',
+  'Faith & Family': 'faith',
+  'Faith & Family events': 'faith',
+  'Faith & Family learning': 'faith',
+
+  // Media
+  'Listen & Watch': 'media',
+  'Radio stations': 'media',
+  'Music discovery': 'media',
+  'Recorded audio': 'media',
+  'Television channels': 'media',
+  'Video library': 'media',
+}
+
+function imageFor(title) {
+  const key = CARD_IMAGE_BY_TITLE[title]
+  return key ? `/images/card-${key}.jpg` : null
+}
+
 function card(title, desc, meta = 'Explore') {
-  return `<article class="content-card"><div class="card-mark">${title.slice(0, 1)}</div><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p><button class="text-action" data-action="demo">${escapeHtml(meta)} →</button></div></article>`
+  const image = imageFor(title)
+  const media = image
+    ? `<div class="card-media"><img src="${image}" alt="" loading="lazy" decoding="async" /></div>`
+    : ''
+  return `<article class="content-card${image ? ' has-media' : ''}">${media}<div class="card-body"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p><button class="text-action" data-action="demo">${escapeHtml(meta)} →</button></div></article>`
 }
 
 function escapeHtml(text) {
@@ -136,10 +206,14 @@ window.addEventListener('online', updateOnlineStatus)
 window.addEventListener('offline', updateOnlineStatus)
 
 // ── Service worker (offline-first cache) ──────────────────────────────────
+// Production builds only: during development a cached shell would serve stale
+// modules and mask hot-reload changes.
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {
-    // Service worker is optional; app works without it
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // The service worker is an enhancement; the app works without it.
+    })
   })
 }
 
