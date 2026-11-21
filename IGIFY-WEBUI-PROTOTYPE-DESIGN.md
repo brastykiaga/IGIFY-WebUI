@@ -653,7 +653,9 @@ IGIFY-WebUI/
     ├── style.css
     └── data/
         ├── index.js
-        └── local.js
+        ├── local.js
+        ├── http.js
+        └── outbox.js
 ```
 
 `public/` is copied verbatim into `dist/`: it holds the manifest, the service worker, the generated PWA icons and the card photographs. `scripts/` and `docs/` are development aids and are not deployed.

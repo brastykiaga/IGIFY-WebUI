@@ -327,7 +327,83 @@ proves the model end to end:
 That slice exercises auth, permissions, offline queueing and idempotency without
 committing to the full content model.
 
+## 15. Deployment: Docker
+
+The Kundiawa deployment already runs on Docker, and the wider service catalogue
+is a set of independent containers. This upgrade should add containers rather
+than introduce a new hosting model.
+
+```yaml
+# Illustrative addition to the existing compose project
+services:
+  api:
+    image: igify/api:1
+    restart: unless-stopped
+    env_file: ./api.env            # never bake secrets into the image
+    depends_on: [db]
+    expose: ["8080"]               # internal only; not published to the host
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: ./db.env
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  nginx:
+    # existing container; add a proxy location
+    volumes:
+      - media-data:/srv/media:ro
+    depends_on: [api]
+
+volumes:
+  db-data:
+  media-data:
+```
+
+Rules that follow from running under Docker:
+
+- **NGINX remains the only ingress.** The `api` container is never published to
+  the host; NGINX proxies `/api/` to it. The frontend stays static files.
+- **No state inside containers.** Database and media live on named volumes, or
+  the deployment cannot survive a container replacement.
+- **Configuration by environment.** API base URL, database URL, token signing
+  keys and storage paths come from env files; nothing is hard-coded.
+- **Logs to stdout/stderr** so `docker logs` works; no log files inside the
+  container.
+- **Health endpoint** `GET /api/v1/health` returns
+  `{ "status": "ok", "version": "1", "db": "ok" }` for the compose healthcheck.
+- **Backups** are a scheduled `pg_dump` of the database volume plus the media
+  volume, with a restore that has actually been rehearsed.
+- **Frontend config:** the WebUI reads its API base from `VITE_API_BASE_URL` at
+  build time, so the same image can point at a staging or provincial instance.
+
+Because each service is its own container, the WebUI must treat the API as a
+network neighbour with an arbitrary address — not as something co-located on the
+same host path.
+
+## 16. Implementation status of the frontend side
+
+| Piece | State |
+| --- | --- |
+| Local adapter (`src/data/local.js`) | Implemented, used by the UI, covered by checks |
+| Data-layer seam (`src/data/index.js`) | Implemented; selects the local adapter |
+| Offline outbox (`src/data/outbox.js`) | Implemented: persistence, ordering, backoff, replay |
+| HTTP adapter (`src/data/http.js`) | Implemented against this contract; **not yet wired into the UI** |
+| Mock server (`scripts/mock-api.mjs`) | Implemented; subset of this contract |
+| Adapter checks (`scripts/test-http-store.mjs`) | 20 checks passing, including offline drain and replay |
+
+Wiring the HTTP adapter into the interface requires making the call sites await
+the store; that is the next frontend task and does not depend on backend
+decisions. It has deliberately not been done yet so the working prototype is not
+destabilised by an async refactor in the same step as the adapter's introduction.
+
 ---
 
-**End of proposal.** Nothing here is implemented yet; the prototype remains
-frontend-only and local.
+**End of proposal.** Nothing here is implemented on the server; the prototype
+remains frontend-only with local persistence.
