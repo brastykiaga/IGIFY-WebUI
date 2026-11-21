@@ -7,13 +7,15 @@ A frontend-only demonstration of the four IGIFY user environments — offline-fi
 - **Offline-first:** Service worker caches the app shell; works without internet after first visit
 - **Mobile-first responsive:** Designed for small screens first, scales up to desktop
 - **Visible theme controls:** 5 charcoal light themes + Dark Mode (keyboard shortcuts Alt+T / Alt+D still work)
+- **Organisation Admin theme:** one fixed cool-charcoal theme, independent of the light theme allocation and Dark Mode
+- **Member public news:** public news and announcements remain visible in the member workspace
 - **localStorage persistence:** Remembers theme, dark mode, sidebar state, and workspace across visits
 - **Offline/online status banner:** Shows when the device is offline
 - **Collapsible sidebar:** on desktop it collapses to an icon rail with hover/focus labels; on small screens it is an overlay drawer with a backdrop that closes after navigation. The choice is remembered per device.
 - **Working local flows:** Account/profile editing, a notifications inbox with unread badge, and Create shortcuts (user, organisation, content, announcement, group, event) that save drafts and list them on the owning screen
-- **Lightweight:** System font stack (no remote Google Fonts), ~43 KB JavaScript (~10 KB gzipped)
+- **Lightweight:** System font stack (no remote Google Fonts), ~44 KB JavaScript (~10.6 KB gzipped)
 - **Accessibility:** Focus-visible states, ARIA labels, keyboard navigation, Escape closes dialogs and the sidebar
-- **PWA:** `public/manifest.json` and `public/sw.js`, copied verbatim into `dist/` by Vite
+- **PWA:** `public/manifest.json`, `public/sw.js` and generated icons (`192`, `512`, maskable, Apple touch). Vite copies `public/` verbatim into `dist/`
 
 > The profile, notification and create flows store data on the device only. They do not authenticate anyone, enforce permissions, or connect to a backend, and should not be read as production access control.
 

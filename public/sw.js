@@ -5,8 +5,15 @@
 //   • Same-origin assets (JS/CSS) use stale-while-revalidate.
 //   • Cross-origin requests are left to the network, with cache fallback if seen before.
 
-const CACHE_NAME = 'igify-webui-v1';
-const SHELL = ['/', '/index.html', '/manifest.json'];
+const CACHE_NAME = 'igify-webui-v2';
+const SHELL = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

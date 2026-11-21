@@ -399,6 +399,16 @@ textarea.field { resize: vertical; font-family: inherit; }
 :root[data-theme="mist"] {
   --sidebar: #626970; --accent: #626970;
 }
+/* Organisation Admin: one fixed cool-charcoal theme, shared by every
+   Organisation Admin dashboard. Independent of the five light themes and of
+   Dark Mode, per the design baseline. */
+:root[data-theme="org"] {
+  --sidebar: #232b31;
+  --accent: #3f5a6b;
+  --accentText: #ffffff;
+  --surface2: #edf1f3;
+  --line: #dfe5e8;
+}
 :root[data-theme="dark"] {
   --page: #202328;
   --surface: #292e34;

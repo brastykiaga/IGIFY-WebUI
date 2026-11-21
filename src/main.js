@@ -280,6 +280,11 @@ function publicCommunityEvents() {
   `
 }
 
+// Shared public-news cards, so members see the same public news as guests.
+function publicNewsCards() {
+  return `${card('Community update', 'Important local news and announcements.')}${card('Education and opportunity', 'New resources and learning opportunities.')}`
+}
+
 function publicLatestNews() {
   return `
     <section class="section">
@@ -288,8 +293,7 @@ function publicLatestNews() {
     <section class="panel">
       <div class="panel-head"><h2>Local and provincial news</h2></div>
       <div class="feature-grid">
-        ${card('Community update', 'Important local news and announcements.')}
-        ${card('Education &amp; opportunity', 'New resources and learning opportunities.')}
+        ${publicNewsCards()}
       </div>
     </section>
     <section class="panel">
@@ -371,6 +375,10 @@ function memberHome() {
         ${card('Saved resources', 'Books, articles and useful material saved for later.')}
         ${card('Community activity', 'Updates from your groups and organisation.')}
       </div>
+    </section>
+    <section class="section">
+      <div class="section-title"><h2>Latest News &amp; Announcements</h2><a data-action="open-public-news">Public news →</a></div>
+      <div class="feature-grid">${publicNewsCards()}</div>
     </section>
     <section class="panel">
       <h2>Messages &amp; activity</h2>
@@ -491,6 +499,10 @@ function memberCommunityEvents() {
         ${card('Organisation updates', 'News from approved organisations.')}
         ${card('Public group information', 'Groups open to community members.')}
       </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Latest News &amp; Announcements</h2><a data-action="open-public-news">Public news →</a></div>
+      <div class="feature-grid">${publicNewsCards()}</div>
     </section>
   `
 }
@@ -757,9 +769,16 @@ function adminAppearanceInterface() {
         <div class="control-row">
           <div>
             <strong>Dark Mode</strong>
-            <p class="muted">Independent of the five light themes.</p>
+            <p class="muted">Independent of the five light themes. The Organisation Admin workspace keeps its own fixed theme.</p>
           </div>
           <button class="outline" data-action="toggle-dark" aria-pressed="${state.dark}">${state.dark ? 'On' : 'Off'}</button>
+        </div>
+        <div class="control-row">
+          <div>
+            <strong>Organisation Admin theme</strong>
+            <p class="muted">One fixed cool-charcoal theme shared by every Organisation Admin dashboard. Not controlled by the light theme allocation or by Dark Mode.</p>
+          </div>
+          <button class="outline" data-action="preview-org">Preview</button>
         </div>
       </div>
     </section>
@@ -1039,7 +1058,8 @@ function submitCreate() {
 
 function render() {
   const e = environments[state.env]
-  document.documentElement.dataset.theme = state.dark ? 'dark' : state.theme
+  // Organisation Admin has its own fixed theme, unaffected by light allocation or Dark Mode.
+  document.documentElement.dataset.theme = state.env === 'org' ? 'org' : state.dark ? 'dark' : state.theme
   document.documentElement.dataset.sidebar = state.sidebar ? 'open' : 'closed'
 
   const nav = e.nav
@@ -1176,6 +1196,11 @@ function render() {
         state.page = 'Discover'
         saveState()
         render()
+      } else if (a === 'open-public-news') {
+        state.env = 'public'
+        state.page = 'Latest News'
+        saveState()
+        render()
       } else if (a === 'profile') {
         state.modal = 'profile'
         render()
@@ -1189,6 +1214,12 @@ function render() {
         saveState()
         render()
         notify(state.dark ? 'Dark Mode on' : 'Dark Mode off')
+      } else if (a === 'preview-org') {
+        state.env = 'org'
+        state.page = 'Overview'
+        saveState()
+        render()
+        notify('Organisation Admin preview — fixed theme applied.')
       } else if (a === 'close-modal') {
         // Ignore clicks on the dialog body; only the overlay or the ✕ button closes.
         if (b.classList.contains('modal-overlay') && ev.target.closest('.modal')) return
@@ -1216,9 +1247,14 @@ function render() {
       } else if (a === 'submit-create') {
         submitCreate()
       } else {
-        notify('This is a prototype interaction; no live service is connected.')
+        notify('Prototype placeholder — this action will connect to the IGIFY backend in a later implementation.')
       }
     })
+  })
+
+  // Placeholder controls announce their status before they are clicked.
+  document.querySelectorAll('[data-action="demo"]').forEach((b) => {
+    b.title = 'Prototype placeholder — not connected to a live service'
   })
 
   // Move focus into an open dialog for keyboard users.
@@ -1250,21 +1286,24 @@ function render() {
     })
   }
 
-  // Theme dropdown in sidebar
-  const themeSelect = document.createElement('select')
-  themeSelect.innerHTML = themeOptions
-  themeSelect.value = state.theme
-  themeSelect.style.cssText =
-    'width:100%;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;'
-  themeSelect.addEventListener('change', (ev) => {
-    state.theme = ev.target.value
-    state.dark = false
-    saveState()
-    render()
-  })
-  const sidebarBottom = document.querySelector('.sidebar-bottom')
-  if (sidebarBottom) {
-    sidebarBottom.parentNode.insertBefore(themeSelect, sidebarBottom)
+  // Theme dropdown in sidebar. The Organisation Admin workspace uses its own
+  // fixed theme, so a user-facing theme choice would be misleading there.
+  if (state.env !== 'org') {
+    const themeSelect = document.createElement('select')
+    themeSelect.innerHTML = themeOptions
+    themeSelect.value = state.theme
+    themeSelect.style.cssText =
+      'width:100%;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;'
+    themeSelect.addEventListener('change', (ev) => {
+      state.theme = ev.target.value
+      state.dark = false
+      saveState()
+      render()
+    })
+    const sidebarBottom = document.querySelector('.sidebar-bottom')
+    if (sidebarBottom) {
+      sidebarBottom.parentNode.insertBefore(themeSelect, sidebarBottom)
+    }
   }
 }
 
@@ -1273,6 +1312,11 @@ render()
 // ── Keyboard shortcuts (accessibility) ────────────────────────────────────
 
 document.addEventListener('keydown', (e) => {
+  if (state.env === 'org' && e.altKey && ['t', 'd'].includes(e.key.toLowerCase())) {
+    e.preventDefault()
+    notify('Organisation Admin uses its own fixed theme.')
+    return
+  }
   if (e.altKey && e.key.toLowerCase() === 't') {
     e.preventDefault()
     const keys = Object.keys(themeNames)
