@@ -1,8 +1,10 @@
-import './style.css'
+﻿import './style.css'
 import photoCredits from '../docs/photo-credits.json'
 import { store } from './data/index.js'
+import { CARD_LINKS, findRecord, TYPE_LABELS } from './content/catalogue.js'
+import { parseRoute, routeHash } from './router.js'
 
-// ── Configuration ─────────────────────────────────────────────────────────
+// â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const themeNames = {
   deep: 'Deep Charcoal',
@@ -28,7 +30,7 @@ const environments = {
   org: {
     label: 'Organisation Admin',
     title: 'Organisation workspace',
-    subtitle: 'Manage your organisation’s presence and activities.',
+    subtitle: 'Manage your organisationâ€™s presence and activities.',
     nav: ['Overview', 'Organisation Profile', 'Members', 'Content', 'Events', 'Resources', 'Reports'],
   },
   admin: {
@@ -39,7 +41,7 @@ const environments = {
   },
 }
 
-// ── State ─────────────────────────────────────────────────────────────────
+// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Interface preferences and domain data both come from the store. Only
 // transient view state lives purely in memory.
 
@@ -50,10 +52,46 @@ const state = {
   offline: false,
   modal: null, // null | 'profile' | 'notifications' | 'create' | 'create-form' | 'credits'
   createType: null, // key of CREATE_TYPES while the create form is open
+  detail: null, // { type, id } when a record detail screen is open
   profile: store.getProfile(),
   notifications: store.listNotifications(),
   items: store.allRecords(),
 }
+
+// A shared or reloaded URL wins over the last visited page.
+const initialRoute = parseRoute(window.location.hash, environments)
+if (initialRoute) {
+  state.env = initialRoute.env
+  state.page = initialRoute.page
+  state.detail = initialRoute.detail
+} else {
+  // Give the first screen an address without triggering a second render.
+  try {
+    window.history.replaceState(null, '', routeHash({ env: state.env, page: state.page }))
+  } catch (err) {
+    /* history may be unavailable in some embedded contexts */
+  }
+}
+
+function applyRoute(route) {
+  if (!route) return
+  state.env = route.env
+  state.page = route.page
+  state.detail = route.detail || null
+  saveState()
+  render()
+}
+
+/** Navigate, keeping the address bar in step with the screen. */
+function go(route) {
+  const hash = routeHash(route)
+  if (window.location.hash === hash) applyRoute(route)
+  else window.location.hash = hash
+}
+
+window.addEventListener('hashchange', () => {
+  applyRoute(parseRoute(window.location.hash, environments))
+})
 
 function saveState() {
   store.setPreferences({
@@ -66,20 +104,20 @@ function saveState() {
   })
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────
+// â”€â”€ Icons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const icon = (name) => ({
-  Home: '⌂', Discover: '⌕', Learn: '▤', 'Community & Events': '♧', 'Latest News': '▣',
-  'Listen & Watch': '♫', 'About IGIFY': 'ⓘ', 'My Profile': '◉',
-  'Continue Learning': '▷', 'Saved Resources': '☆', Messages: '✉', 'My Groups': '♧',
-  Overview: '▦', 'Organisation Profile': '▤', Members: '♙', Content: '▧', Events: '▣',
-  Resources: '▤', Reports: '▥', Dashboard: '▦', 'Users & Identity': '♙',
-  Organisations: '▧', 'Content & Editorial': '▤', 'Community & Safety': '♧',
-  'Modules & Services': '▦', 'Appearance & Interface': '◐', 'Platform & System': '⚙',
-  'Audit & Activity': '≡',
-}[name] || '•')
+  Home: 'âŒ‚', Discover: 'âŒ•', Learn: 'â–¤', 'Community & Events': 'â™§', 'Latest News': 'â–£',
+  'Listen & Watch': 'â™«', 'About IGIFY': 'â“˜', 'My Profile': 'â—‰',
+  'Continue Learning': 'â–·', 'Saved Resources': 'â˜†', Messages: 'âœ‰', 'My Groups': 'â™§',
+  Overview: 'â–¦', 'Organisation Profile': 'â–¤', Members: 'â™™', Content: 'â–§', Events: 'â–£',
+  Resources: 'â–¤', Reports: 'â–¥', Dashboard: 'â–¦', 'Users & Identity': 'â™™',
+  Organisations: 'â–§', 'Content & Editorial': 'â–¤', 'Community & Safety': 'â™§',
+  'Modules & Services': 'â–¦', 'Appearance & Interface': 'â—', 'Platform & System': 'âš™',
+  'Audit & Activity': 'â‰¡',
+}[name] || 'â€¢')
 
-// ── Notifications ─────────────────────────────────────────────────────────
+// â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 let toastTimer = null
 
@@ -90,7 +128,7 @@ function notify(message) {
   toastTimer = setTimeout(() => { state.toast = ''; render() }, 2300)
 }
 
-// ── Cards ─────────────────────────────────────────────────────────────────
+// â”€â”€ Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Photographs for content cards. Titles not listed here render as plain text
 // cards, which is intentional for administrative and utility screens where an
@@ -163,7 +201,23 @@ function card(title, desc, meta = 'Explore') {
   const media = image
     ? `<div class="card-media"><img src="${image}" alt="" loading="lazy" decoding="async" /></div>`
     : ''
-  return `<article class="content-card${image ? ' has-media' : ''}">${media}<div class="card-body"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p><button class="text-action" data-action="demo">${escapeHtml(meta)} →</button></div></article>`
+  return `<article class="content-card${image ? ' has-media' : ''}">${media}<div class="card-body"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p>${cardAction(title, meta)}</div></article>`
+}
+
+/**
+ * What a card's button does. Category cards open a workspace page, content
+ * cards open a detail record, and everything unmapped says so plainly.
+ */
+function cardAction(title, meta) {
+  const link = CARD_LINKS[title]
+  const label = `${escapeHtml(meta)} â†’`
+  if (link?.page) {
+    return `<button class="text-action" data-action="card-page" data-page-target="${escapeHtml(link.page)}">${label}</button>`
+  }
+  if (link?.type && link?.id) {
+    return `<button class="text-action" data-action="card-detail" data-detail-type="${escapeHtml(link.type)}" data-detail-id="${escapeHtml(link.id)}">${label}</button>`
+  }
+  return `<button class="text-action" data-action="demo">${label}</button>`
 }
 
 function escapeHtml(text) {
@@ -172,7 +226,7 @@ function escapeHtml(text) {
   return div.innerHTML
 }
 
-// ── Offline / Online detection ────────────────────────────────────────────
+// â”€â”€ Offline / Online detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function updateOnlineStatus() {
   state.offline = !navigator.onLine
@@ -182,7 +236,7 @@ function updateOnlineStatus() {
 window.addEventListener('online', updateOnlineStatus)
 window.addEventListener('offline', updateOnlineStatus)
 
-// ── Service worker (offline-first cache) ──────────────────────────────────
+// â”€â”€ Service worker (offline-first cache) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Production builds only: during development a cached shell would serve stale
 // modules and mask hot-reload changes.
 
@@ -194,7 +248,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   })
 }
 
-// ── Public WebUI content ──────────────────────────────────────────────────
+// â”€â”€ Public WebUI content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function publicHome() {
   return `
@@ -213,10 +267,10 @@ function publicHome() {
       </div>
     </section>
     <section class="section">
-      <div class="section-title"><h2>Latest News &amp; Announcements</h2><a data-action="demo">See all →</a></div>
+      <div class="section-title"><h2>Latest News &amp; Announcements</h2><button class="text-action" data-action="card-page" data-page-target="Latest News">See all â†’</button></div>
       <div class="feature-grid">
         ${card('Community update', 'Important local news and announcements.')}
-        ${card('Learning &amp; opportunity', 'New resources and opportunities to explore.')}
+        ${card('Learning & opportunity', 'New resources and opportunities to explore.')}
       </div>
     </section>
     <section class="section">
@@ -224,10 +278,10 @@ function publicHome() {
       <div class="feature-grid">
         ${card('Learn', 'Educational resources and practical skills.')}
         ${card('Discover', 'Explore information, ideas and knowledge.')}
-        ${card('Skills &amp; Farming', 'Useful local skills and agricultural knowledge.')}
-        ${card('Faith &amp; Family', 'Resources for faith, family and community life.')}
-        ${card('Listen &amp; Watch', 'Radio, television and recorded media.')}
-        ${card('Community &amp; Events', 'Find local activities and community happenings.')}
+        ${card('Skills & Farming', 'Useful local skills and agricultural knowledge.')}
+        ${card('Faith & Family', 'Resources for faith, family and community life.')}
+        ${card('Listen & Watch', 'Radio, television and recorded media.')}
+        ${card('Community & Events', 'Find local activities and community happenings.')}
       </div>
     </section>
     <section class="section">
@@ -250,14 +304,14 @@ function publicDiscover() {
       <div class="feature-grid">
         ${card('Learn', 'Educational resources and practical skills.')}
         ${card('Discover', 'Explore information, ideas and knowledge.')}
-        ${card('Skills &amp; Farming', 'Useful local skills and agricultural knowledge.')}
-        ${card('Faith &amp; Family', 'Resources for faith, family and community life.')}
+        ${card('Skills & Farming', 'Useful local skills and agricultural knowledge.')}
+        ${card('Faith & Family', 'Resources for faith, family and community life.')}
       </div>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Local knowledge and information</h2></div>
       <div class="feature-grid">
-        ${card('History &amp; Archives', 'Offline copies of local government and community records.')}
+        ${card('History & Archives', 'Offline copies of local government and community records.')}
         ${card('Learning opportunities', 'Courses, workshops and study programs nearby.')}
         ${card('Services', 'Local services and community support.')}
       </div>
@@ -265,7 +319,7 @@ function publicDiscover() {
     <section class="panel">
       <div class="panel-head"><h2>Media</h2></div>
       <div class="feature-grid">
-        ${card('Listen &amp; Watch', 'Radio stations, television channels and recorded media.')}
+        ${card('Listen & Watch', 'Radio stations, television channels and recorded media.')}
         ${card('Search IGIFY', 'Search across local content and services.')}
       </div>
     </section>
@@ -288,14 +342,14 @@ function publicLearn() {
       <div class="panel-head"><h2>Practical skills</h2></div>
       <div class="feature-grid">
         ${card('Digital skills', 'Computer basics, internet safety and productivity.')}
-        ${card('Skills &amp; Farming', 'Agricultural knowledge and local trades.')}
+        ${card('Skills & Farming', 'Agricultural knowledge and local trades.')}
       </div>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Reading and books</h2></div>
       <div class="feature-grid">
         ${card('Digital library', 'Books, articles and documents to read online or offline.')}
-        ${card('Faith &amp; Family learning', 'Resources for faith, family and community life.')}
+        ${card('Faith & Family learning', 'Resources for faith, family and community life.')}
       </div>
     </section>
   `
@@ -318,7 +372,7 @@ function publicCommunityEvents() {
       <div class="feature-grid">
         ${card('Upcoming events', 'Local activities and gatherings.')}
         ${card('Learning events', 'Workshops, classes and study groups.')}
-        ${card('Faith &amp; Family events', 'Faith and family community gatherings.')}
+        ${card('Faith & Family events', 'Faith and family community gatherings.')}
       </div>
     </section>
     <section class="panel">
@@ -404,13 +458,13 @@ function publicAbout() {
       <div class="feature-grid">
         ${card('Public browsing', 'Open to all visitors without an account.')}
         ${card('Registered features', 'Some interactive features require registration and approval.')}
-        ${card('Local &amp; offline', 'Content remains available when the internet is unavailable.')}
+        ${card('Local & offline', 'Content remains available when the internet is unavailable.')}
       </div>
     </section>
   `
 }
 
-// ── Member WebUI content ──────────────────────────────────────────────────
+// â”€â”€ Member WebUI content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function memberHome() {
   return `
@@ -420,7 +474,7 @@ function memberHome() {
       <p>Pick up where you left off, keep track of your learning and stay connected with your community.</p>
     </section>
     <section class="section">
-      <div class="section-title"><h2>Continue where you left off</h2><a data-action="demo">View history →</a></div>
+      <div class="section-title"><h2>Continue where you left off</h2><a data-action="demo">View history â†’</a></div>
       <div class="feature-grid">
         ${card('Your learning', 'Return to your last lesson or saved learning resource.')}
         ${card('Saved resources', 'Books, articles and useful material saved for later.')}
@@ -428,7 +482,7 @@ function memberHome() {
       </div>
     </section>
     <section class="section">
-      <div class="section-title"><h2>Latest News &amp; Announcements</h2><a data-action="open-public-news">Public news →</a></div>
+      <div class="section-title"><h2>Latest News &amp; Announcements</h2><a data-action="open-public-news">Public news â†’</a></div>
       <div class="feature-grid">${publicNewsCards()}</div>
     </section>
     <section class="panel">
@@ -465,7 +519,7 @@ function memberContinueLearning() {
       <div class="section-title"><h2>Continue Learning</h2><p>Resume your last lesson or learning resource.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Your learning</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Your learning</h2><a data-action="demo">View all â†’</a></div>
       <div class="feature-grid">
         ${card('Last lesson', 'Return to where you left off.')}
         ${card('Recent activity', 'Your recent learning history.')}
@@ -481,7 +535,7 @@ function memberSavedResources() {
       <div class="section-title"><h2>Saved Resources</h2><p>Saved books, articles, documents and lessons.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Your saved items</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Your saved items</h2><a data-action="demo">View all â†’</a></div>
       <div class="feature-grid">
         ${card('Saved books', 'Books saved for later reading.')}
         ${card('Saved articles', 'Articles and documents.')}
@@ -497,7 +551,7 @@ function memberMessages() {
       <div class="section-title"><h2>Messages</h2><p>Member messages and unread indicators.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Inbox</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Inbox</h2><a data-action="demo">View all â†’</a></div>
       <div class="feature-grid">
         ${card('Unread messages', 'Messages you have not yet read.')}
         ${card('Conversations', 'Your message threads.')}
@@ -517,7 +571,7 @@ function memberMyGroups() {
       <div class="section-title"><h2>My Groups</h2><p>Groups you are permitted to view or participate in.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Your groups</h2><a data-action="demo">View all →</a></div>
+      <div class="panel-head"><h2>Your groups</h2><a data-action="demo">View all â†’</a></div>
       <div class="feature-grid">
         ${card('Group activity', 'Updates from your groups.')}
         ${card('Membership', 'Your group memberships.')}
@@ -552,13 +606,13 @@ function memberCommunityEvents() {
       </div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Latest News &amp; Announcements</h2><a data-action="open-public-news">Public news →</a></div>
+      <div class="panel-head"><h2>Latest News &amp; Announcements</h2><a data-action="open-public-news">Public news â†’</a></div>
       <div class="feature-grid">${publicNewsCards()}</div>
     </section>
   `
 }
 
-// ── Organisation Admin content ────────────────────────────────────────────
+// â”€â”€ Organisation Admin content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function orgOverview() {
   return `
@@ -568,9 +622,9 @@ function orgOverview() {
       <div class="stat"><span>Upcoming events</span><b>4</b><small>Illustrative sample</small></div>
     </div>
     <section class="panel">
-      <div class="panel-head"><h2>Overview</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Overview</h2><button class="primary" data-action="create">ï¼‹ Create</button></div>
       <div class="feature-grid">
-        ${card('Pending tasks', 'Your organisation’s pending tasks.')}
+        ${card('Pending tasks', 'Your organisationâ€™s pending tasks.')}
         ${card('Recent activity', 'Recent content and event activity.')}
         ${card('Membership summary', 'Membership and activity summaries.')}
       </div>
@@ -581,7 +635,7 @@ function orgOverview() {
 function orgProfile() {
   return `
     <section class="section">
-      <div class="section-title"><h2>Organisation Profile</h2><p>Maintain your organisation’s public information.</p></div>
+      <div class="section-title"><h2>Organisation Profile</h2><p>Maintain your organisationâ€™s public information.</p></div>
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Organisation details</h2><button class="primary" data-action="demo">Edit profile</button></div>
@@ -615,7 +669,7 @@ function orgContent() {
       <div class="section-title"><h2>Content</h2><p>Prepare and submit organisation content.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Submissions</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Submissions</h2><button class="primary" data-action="create">ï¼‹ Create</button></div>
       <div class="feature-grid">
         ${card('Prepare content', 'Prepare organisation content for submission.')}
         ${card('Publishing', 'Publishing approval remains with the authorised editorial process.')}
@@ -634,7 +688,7 @@ function orgEvents() {
       <div class="section-title"><h2>Events</h2><p>Prepare and manage organisation event information.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Events</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Events</h2><button class="primary" data-action="create">ï¼‹ Create</button></div>
       <div class="feature-grid">
         ${card('Manage events', 'Prepare and manage organisation event information.')}
         ${card('Visibility', 'Public visibility follows publishing and moderation rules.')}
@@ -653,7 +707,7 @@ function orgResources() {
       <div class="section-title"><h2>Resources</h2><p>Manage or submit organisation resources within assigned permissions.</p></div>
     </section>
     <section class="panel">
-      <div class="panel-head"><h2>Resources</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Resources</h2><button class="primary" data-action="create">ï¼‹ Create</button></div>
       <div class="feature-grid">
         ${card('Manage resources', 'Manage organisation resources.')}
         ${card('Permissions', 'Within your assigned permissions.')}
@@ -677,7 +731,7 @@ function orgReports() {
   `
 }
 
-// ── IGIFY Administrator content ───────────────────────────────────────────
+// â”€â”€ IGIFY Administrator content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function adminDashboard() {
   return `
@@ -703,7 +757,7 @@ function adminDashboard() {
 function adminUsersIdentity() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Users &amp; Identity</h2><button class="primary" data-action="create">＋ Register user</button></div>
+      <div class="panel-head"><h2>Users &amp; Identity</h2><button class="primary" data-action="create">ï¼‹ Register user</button></div>
       <div class="feature-grid">
         ${card('User directory', 'User directory and profile management.')}
         ${card('Registration review', 'Registration and account review.')}
@@ -714,7 +768,7 @@ function adminUsersIdentity() {
     </section>
     <section class="panel">
       <div class="panel-head"><h2>Created in this prototype</h2></div>
-      ${createdList('users', 'No users registered in this prototype yet. Use ＋ Register user.')}
+      ${createdList('users', 'No users registered in this prototype yet. Use ï¼‹ Register user.')}
     </section>
   `
 }
@@ -722,7 +776,7 @@ function adminUsersIdentity() {
 function adminOrganisations() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Organisations</h2><button class="primary" data-action="create">＋ Register organisation</button></div>
+      <div class="panel-head"><h2>Organisations</h2><button class="primary" data-action="create">ï¼‹ Register organisation</button></div>
       <div class="feature-grid">
         ${card('Organisation registration', 'Organisation registration and approval.')}
         ${card('Organisation profiles', 'Organisation profiles and records.')}
@@ -741,7 +795,7 @@ function adminOrganisations() {
 function adminContentEditorial() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Content &amp; Editorial</h2><button class="primary" data-action="create">＋ Create</button></div>
+      <div class="panel-head"><h2>Content &amp; Editorial</h2><button class="primary" data-action="create">ï¼‹ Create</button></div>
       <div class="feature-grid">
         ${card('Publishing', 'Content publishing and approval.')}
         ${card('Homepage placement', 'Homepage featured and editorial placement.')}
@@ -768,7 +822,7 @@ function adminContentEditorial() {
 function adminCommunitySafety() {
   return `
     <section class="panel">
-      <div class="panel-head"><h2>Community &amp; Safety</h2><button class="primary" data-action="create">＋ Create group</button></div>
+      <div class="panel-head"><h2>Community &amp; Safety</h2><button class="primary" data-action="create">ï¼‹ Create group</button></div>
       <div class="feature-grid">
         ${card('Groups', 'Groups and membership oversight.')}
         ${card('Moderation', 'Discussion and comment moderation.')}
@@ -790,7 +844,7 @@ function adminModulesServices() {
       <div class="panel-head"><h2>Modules &amp; Services</h2><button class="primary" data-action="demo">Manage services</button></div>
       <div class="feature-grid">
         ${card('Modules', 'Manage IGIFY modules and services.')}
-        ${card('Radio &amp; TV', 'Radio and TV management.')}
+        ${card('Radio & TV', 'Radio and TV management.')}
         ${card('Learning', 'Learning resources.')}
         ${card('Search', 'Migle search and content availability.')}
         ${card('Health', 'Service health and availability indicators.')}
@@ -877,7 +931,7 @@ function adminAuditActivity() {
   `
 }
 
-// ── Content router ────────────────────────────────────────────────────────
+// â”€â”€ Content router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const adminPages = {
   Dashboard: adminDashboard,
@@ -925,10 +979,10 @@ function contentFor(env, page) {
   const pageMaps = { admin: adminPages, org: orgPages, member: memberPages, public: publicPages }
   const fn = pageMaps[env]?.[page]
   if (fn) return fn()
-  return `<section class="panel"><div class="panel-head"><h2>${escapeHtml(page)}</h2><p class="muted">${escapeHtml(environments[env].label)} workspace · demonstration content</p></div></section>`
+  return `<section class="panel"><div class="panel-head"><h2>${escapeHtml(page)}</h2><p class="muted">${escapeHtml(environments[env].label)} workspace Â· demonstration content</p></div></section>`
 }
 
-// ── Local prototype flows: profile, notifications, create ─────────────────
+// â”€â”€ Local prototype flows: profile, notifications, create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CREATE_TYPES = {
   user: { label: 'Register a user', page: 'Users & Identity', collection: 'users', status: 'Pending review' },
@@ -969,7 +1023,7 @@ function createdList(collection, emptyText) {
           <strong>${escapeHtml(item.title)}</strong>
           ${item.detail ? `<span>${escapeHtml(item.detail)}</span>` : ''}
         </div>
-        <small>${escapeHtml(item.status)} · ${escapeHtml(formatTime(item.at))}</small>
+        <small>${escapeHtml(item.status)} Â· ${escapeHtml(formatTime(item.at))}</small>
       </li>`
     )
     .join('')}</ul>`
@@ -980,7 +1034,7 @@ function modalShell(title, bodyHtml, footerHtml = '') {
     <div class="modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
       <div class="modal-head">
         <h2>${escapeHtml(title)}</h2>
-        <button class="icon-btn" data-action="close-modal" aria-label="Close">✕</button>
+        <button class="icon-btn" data-action="close-modal" aria-label="Close">âœ•</button>
       </div>
       <div class="modal-body">${bodyHtml}</div>
       ${footerHtml ? `<div class="modal-foot">${footerHtml}</div>` : ''}
@@ -998,7 +1052,7 @@ function profileModal() {
       <div><span class="meta-label">Role</span><span>${escapeHtml(p.role)}</span></div>
       <div><span class="meta-label">Identity</span><span>${escapeHtml(p.kyc)}</span></div>
     </div>
-    <p class="muted">Prototype only — the backend enforces identity and verification.</p>
+    <p class="muted">Prototype only â€” the backend enforces identity and verification.</p>
   `
   const foot = `<button class="outline" data-action="close-modal">Cancel</button><button class="primary" data-action="save-profile">Save profile</button>`
   return modalShell('Account', body, foot)
@@ -1055,12 +1109,12 @@ function creditsModal() {
   const items = Object.entries(photoCredits)
     .map(([module, c]) => {
       const source = c.source
-        ? ` · <a href="${escapeHtml(c.source)}" target="_blank" rel="noopener noreferrer">source</a>`
+        ? ` Â· <a href="${escapeHtml(c.source)}" target="_blank" rel="noopener noreferrer">source</a>`
         : ''
       return `<li>
         <strong>${escapeHtml(module)}</strong>
         <p>${escapeHtml(c.title || '')}</p>
-        <small>${escapeHtml(c.creator || 'Unknown')} · ${escapeHtml(c.license || '')}${source}</small>
+        <small>${escapeHtml(c.creator || 'Unknown')} Â· ${escapeHtml(c.license || '')}${source}</small>
       </li>`
     })
     .join('')
@@ -1102,7 +1156,7 @@ function submitCreate() {
   const detail = (detailEl?.value || '').trim()
   store.createRecord(t.collection, { title, detail, status: t.status })
   state.items = store.allRecords()
-  addNotification(`${t.label} saved`, `${title} — ${t.status.toLowerCase()}.`)
+  addNotification(`${t.label} saved`, `${title} â€” ${t.status.toLowerCase()}.`)
 
   // Stay inside the Organisation Admin workspace for its own content and events.
   const orgTarget = state.env === 'org' && (state.createType === 'content' || state.createType === 'event')
@@ -1120,10 +1174,40 @@ function submitCreate() {
   notify(`${title} added to ${state.page}.`)
 }
 
-// ── Render ────────────────────────────────────────────────────────────────
+// â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+/** One reusable detail layout for every record type. */
+function detailView(item, page) {
+  const meta = (item.meta || [])
+    .map(
+      (m) =>
+        `<div><span class="meta-label">${escapeHtml(m.label)}</span><span>${escapeHtml(m.value)}</span></div>`
+    )
+    .join('')
+
+  return `<div class="detail-wrap">
+    <button class="back-link" data-action="detail-back">â† Back to ${escapeHtml(page)}</button>
+    <article class="detail">
+      ${item.image ? `<div class="detail-media"><img src="${escapeHtml(item.image)}" alt="" /></div>` : ''}
+      <div class="detail-content">
+        <div class="eyebrow">${escapeHtml(TYPE_LABELS[item.type] || 'Record')}</div>
+        <h2>${escapeHtml(item.title)}</h2>
+        <p class="detail-summary">${escapeHtml(item.summary || '')}</p>
+        ${meta ? `<div class="detail-meta">${meta}</div>` : ''}
+        ${item.sample ? '<p class="sample-note">Demonstration content â€” not IGIFY editorial material.</p>' : ''}
+        <div class="detail-text">${(item.body || []).map((p) => `<p>${escapeHtml(p)}</p>`).join('')}</div>
+      </div>
+    </article>
+  </div>`
+}
 
 function render() {
   const e = environments[state.env]
+
+  // A stale or hand-edited detail route should fall back to the page, not blank.
+  const record = state.detail ? findRecord(state.detail.type, state.detail.id) : null
+  if (state.detail && !record) state.detail = null
+
   // Organisation Admin has its own fixed theme, unaffected by light allocation or Dark Mode.
   document.documentElement.dataset.theme = state.env === 'org' ? 'org' : state.dark ? 'dark' : state.theme
   document.documentElement.dataset.sidebar = state.sidebar ? 'open' : 'closed'
@@ -1148,7 +1232,7 @@ function render() {
   // expand control, because a native select cannot be rendered as an icon.
   const workspaceControl =
     wide && state.collapsed
-      ? '<button class="rail-btn" data-action="expand-sidebar" title="Change workspace" aria-label="Change workspace">▦</button>'
+      ? '<button class="rail-btn" data-action="expand-sidebar" title="Change workspace" aria-label="Change workspace">â–¦</button>'
       : [
           '<div class="env-label">WORKSPACE</div>',
           '<select id="environment" aria-label="Choose workspace">',
@@ -1174,37 +1258,41 @@ function render() {
         <nav>${nav}</nav>
         <div class="sidebar-bottom">
           <span class="status-dot ${state.offline ? '' : 'online'}"></span>
-          Prototype environment <small>v1.0 · sample data</small>
+          Prototype environment <small>v1.0 Â· sample data</small>
         </div>
       </aside>
       <main class="main">
-        ${state.offline ? '<div class="offline-banner show">● Offline — content served from local cache</div>' : ''}
+        ${state.offline ? '<div class="offline-banner show">â— Offline â€” content served from local cache</div>' : ''}
         <header class="topbar">
-          <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">☰</button>
-          <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}</div>
+          <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">â˜°</button>
+          <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}${record ? ` <span>/</span> ${escapeHtml(record.title)}` : ''}</div>
           <div class="top-actions">
             <div class="search" role="search" aria-label="Search IGIFY">
-              <span>⌕</span>
+              <span>âŒ•</span>
               <input id="search" placeholder="Search IGIFY" value="${escapeHtml(state.search)}" />
             </div>
-            <button class="icon-btn bell" data-action="notifications" title="Notifications" aria-label="Notifications${unreadCount() ? ` (${unreadCount()} unread)` : ''}">♧${unreadCount() ? `<span class="badge">${unreadCount()}</span>` : ''}</button>
+            <button class="icon-btn bell" data-action="notifications" title="Notifications" aria-label="Notifications${unreadCount() ? ` (${unreadCount()} unread)` : ''}">â™§${unreadCount() ? `<span class="badge">${unreadCount()}</span>` : ''}</button>
             <button class="profile" data-action="profile" aria-label="Account">${initial(state.profile.name)}</button>
-            <button class="icon-btn" data-action="theme-settings" title="Appearance &amp; themes">◐</button>
+            <button class="icon-btn" data-action="theme-settings" title="Appearance &amp; themes">â—</button>
           </div>
         </header>
         <div class="page-wrap">
           <div class="page-heading">
             <div>
-              <div class="eyebrow">${escapeHtml(e.label).toUpperCase()}</div>
-              <h1>${state.page === 'Home' ? e.title : escapeHtml(state.page)}</h1>
-              <p>${escapeHtml(e.subtitle)}</p>
+              ${record
+                ? `<div class="eyebrow">${escapeHtml(TYPE_LABELS[record.type] || 'RECORD')}</div>
+                   <h1>${escapeHtml(record.title)}</h1>
+                   <p>${escapeHtml(record.summary || '')}</p>`
+                : `<div class="eyebrow">${escapeHtml(e.label).toUpperCase()}</div>
+                   <h1>${state.page === 'Home' ? e.title : escapeHtml(state.page)}</h1>
+                   <p>${escapeHtml(e.subtitle)}</p>`}
             </div>
-            ${state.env === 'admin' ? '<button class="primary create-top" data-action="create">＋ Create</button>' : ''}
+            ${state.env === 'admin' && !record ? '<button class="primary create-top" data-action="create">ï¼‹ Create</button>' : ''}
           </div>
-          ${contentFor(state.env, state.page)}
+          ${record ? detailView(record, state.page) : contentFor(state.env, state.page)}
           <footer>
             IGIFY WebUI Prototype v1.1
-            <span>Frontend demonstration · Not connected to production services</span>
+            <span>Frontend demonstration Â· Not connected to production services</span>
             <button class="link-btn" data-action="credits">Photo credits</button>
           </footer>
         </div>
@@ -1218,26 +1306,22 @@ function render() {
     </div>
   `
 
-  // ── Event listeners ─────────────────────────────────────────────
+  // â”€â”€ Event listeners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const envSelect = document.querySelector('#environment')
   if (envSelect) {
     envSelect.addEventListener('change', (ev) => {
-      state.env = ev.target.value
-      state.page = environments[state.env].nav[0]
+      const env = ev.target.value
       if (!window.matchMedia('(min-width: 700px)').matches) state.sidebar = false
-      saveState()
-      render()
+      go({ env, page: environments[env].nav[0] })
     })
   }
 
   document.querySelectorAll('[data-page]').forEach((b) => {
     b.addEventListener('click', () => {
-      state.page = b.dataset.page
       // On small screens the drawer should close once a destination is chosen.
       if (!window.matchMedia('(min-width: 700px)').matches) state.sidebar = false
-      saveState()
-      render()
+      go({ env: state.env, page: b.dataset.page })
     })
   })
 
@@ -1261,14 +1345,19 @@ function render() {
         state.createType = null
         render()
       } else if (a === 'discover') {
-        state.page = 'Discover'
-        saveState()
-        render()
+        go({ env: state.env, page: 'Discover' })
       } else if (a === 'open-public-news') {
-        state.env = 'public'
-        state.page = 'Latest News'
-        saveState()
-        render()
+        go({ env: 'public', page: 'Latest News' })
+      } else if (a === 'card-page') {
+        go({ env: state.env, page: b.dataset.pageTarget })
+      } else if (a === 'card-detail') {
+        go({
+          env: state.env,
+          page: state.page,
+          detail: { type: b.dataset.detailType, id: b.dataset.detailId },
+        })
+      } else if (a === 'detail-back') {
+        go({ env: state.env, page: state.page, detail: null })
       } else if (a === 'profile') {
         state.modal = 'profile'
         render()
@@ -1276,20 +1365,17 @@ function render() {
         state.modal = 'notifications'
         render()
       } else if (a === 'theme-settings') {
-        notify('Theme settings opened — use the appearance dropdown below.')
+        notify('Theme settings opened â€” use the appearance dropdown below.')
       } else if (a === 'toggle-dark') {
         state.dark = !state.dark
         saveState()
         render()
         notify(state.dark ? 'Dark Mode on' : 'Dark Mode off')
       } else if (a === 'preview-org') {
-        state.env = 'org'
-        state.page = 'Overview'
-        saveState()
-        render()
-        notify('Organisation Admin preview — fixed theme applied.')
+        go({ env: 'org', page: 'Overview' })
+        notify('Organisation Admin preview â€” fixed theme applied.')
       } else if (a === 'close-modal') {
-        // Ignore clicks on the dialog body; only the overlay or the ✕ button closes.
+        // Ignore clicks on the dialog body; only the overlay or the âœ• button closes.
         if (b.classList.contains('modal-overlay') && ev.target.closest('.modal')) return
         closeModal()
       } else if (a === 'save-profile') {
@@ -1316,14 +1402,14 @@ function render() {
         state.modal = 'credits'
         render()
       } else {
-        notify('Prototype placeholder — this action will connect to the IGIFY backend in a later implementation.')
+        notify('Prototype placeholder â€” this action will connect to the IGIFY backend in a later implementation.')
       }
     })
   })
 
   // Placeholder controls announce their status before they are clicked.
   document.querySelectorAll('[data-action="demo"]').forEach((b) => {
-    b.title = 'Prototype placeholder — not connected to a live service'
+    b.title = 'Prototype placeholder â€” not connected to a live service'
   })
 
   // Move focus into an open dialog for keyboard users.
@@ -1339,11 +1425,11 @@ function render() {
   })
   search.addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter') {
-      notify(state.search ? `Demo search for “${escapeHtml(state.search)}” — search service not connected.` : 'Enter a search term.')
+      notify(state.search ? `Demo search for â€œ${escapeHtml(state.search)}â€ â€” search service not connected.` : 'Enter a search term.')
     }
   })
 
-  // Appearance page theme control (Administrator → Appearance & Interface)
+  // Appearance page theme control (Administrator â†’ Appearance & Interface)
   const themeChoice = document.querySelector('#theme-choice')
   if (themeChoice) {
     themeChoice.addEventListener('change', (ev) => {
@@ -1378,7 +1464,7 @@ function render() {
 
 render()
 
-// ── Keyboard shortcuts (accessibility) ────────────────────────────────────
+// â”€â”€ Keyboard shortcuts (accessibility) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 document.addEventListener('keydown', (e) => {
   if (state.env === 'org' && e.altKey && ['t', 'd'].includes(e.key.toLowerCase())) {
@@ -1406,6 +1492,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (state.modal) {
       closeModal()
+      return
+    }
+    if (state.detail) {
+      go({ env: state.env, page: state.page, detail: null })
       return
     }
     state.sidebar = false
