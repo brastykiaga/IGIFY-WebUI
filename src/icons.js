@@ -44,6 +44,20 @@ const P = {
     '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/>',
   music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
   film: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  check: '<path d="m4 12.5 5 5L20 6.5"/>',
+  eye: '<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.8"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8-8M16 5l2.5 2.5M13.5 7.5 16 10"/>',
+  tag: '<path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="7.5" r="1.2"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+  spark: '<path d="m12 3 2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z"/>',
+  wifiOff:
+    '<path d="m3 4 18 16"/><path d="M5 10a13 13 0 0 1 4-2.3M19 10a13 13 0 0 0-9-3.8"/><path d="M8.5 14a7 7 0 0 1 3-1.6M15.5 14a7 7 0 0 0-2-1.4"/><circle cx="12" cy="18" r="1"/>',
+  lock: '<rect x="4.5" y="10" width="15" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  database:
+    '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  upload: '<path d="M12 17V5"/><path d="m7 10 5-5 5 5"/><path d="M4 19h16"/>',
+  activity: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
   dot: '<circle cx="12" cy="12" r="3"/>',
 }
 

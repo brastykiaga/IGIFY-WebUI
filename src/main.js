@@ -197,20 +197,94 @@ function imageFor(title) {
  * no Papua New Guinea radio or television photography exists in the commons.
  */
 const CARD_TILES = {
+  // Broadcast and audio: no suitable PNG photograph exists, so the format is
+  // shown as a designed tile with a visible label.
   'Radio stations': { icon: 'radio', label: 'Radio' },
   'Television channels': { icon: 'tv', label: 'Television' },
   'Recorded audio': { icon: 'headphones', label: 'Audio' },
+
+  // Utility and administrative cards: a compact icon band, no label, so the
+  // card keeps a visual anchor without repeating its heading.
+  'Learning & opportunity': { icon: 'cap', compact: true },
+  'Digital skills': { icon: 'cap', compact: true },
+  'Public browsing': { icon: 'search', compact: true },
+  'Registered features': { icon: 'userCheck', compact: true },
+  'Local & offline': { icon: 'wifiOff', compact: true },
+  Progress: { icon: 'chart', compact: true },
+  'Saved books': { icon: 'bookmark', compact: true },
+  'Unread messages': { icon: 'mail', compact: true },
+  Conversations: { icon: 'mail', compact: true },
+  'Group updates': { icon: 'users', compact: true },
+  'Group activity': { icon: 'users', compact: true },
+  Membership: { icon: 'users', compact: true },
+  Participation: { icon: 'users', compact: true },
+  'Pending tasks': { icon: 'clock', compact: true },
+  'Membership summary': { icon: 'chart', compact: true },
+  'Public information': { icon: 'file', compact: true },
+  Review: { icon: 'check', compact: true },
+  Members: { icon: 'users', compact: true },
+  Roles: { icon: 'key', compact: true },
+  Rules: { icon: 'shield', compact: true },
+  'Prepare content': { icon: 'file', compact: true },
+  Publishing: { icon: 'file', compact: true },
+  'Manage events': { icon: 'calendar', compact: true },
+  Visibility: { icon: 'eye', compact: true },
+  'Manage resources': { icon: 'folder', compact: true },
+  Permissions: { icon: 'key', compact: true },
+  Engagement: { icon: 'chart', compact: true },
+  Activity: { icon: 'activity', compact: true },
+  'User directory': { icon: 'userCheck', compact: true },
+  'Registration review': { icon: 'userCheck', compact: true },
+  'KYC verification': { icon: 'shield', compact: true },
+  'Member status': { icon: 'user', compact: true },
+  'User activity': { icon: 'activity', compact: true },
+  'Organisation registration': { icon: 'building', compact: true },
+  'Organisation profiles': { icon: 'building', compact: true },
+  'Membership oversight': { icon: 'users', compact: true },
+  'Admin appointments': { icon: 'userCheck', compact: true },
+  'Organisation status': { icon: 'building', compact: true },
+  'Homepage placement': { icon: 'grid', compact: true },
+  News: { icon: 'newspaper', compact: true },
+  Noticeboard: { icon: 'newspaper', compact: true },
+  Categories: { icon: 'tag', compact: true },
+  Groups: { icon: 'users', compact: true },
+  Moderation: { icon: 'shield', compact: true },
+  Reports: { icon: 'chart', compact: true },
+  Notices: { icon: 'newspaper', compact: true },
+  Safety: { icon: 'shield', compact: true },
+  Modules: { icon: 'box', compact: true },
+  'Radio & TV': { icon: 'radio', compact: true },
+  Learning: { icon: 'cap', compact: true },
+  Search: { icon: 'search', compact: true },
+  Health: { icon: 'activity', compact: true },
+  'Org theme': { icon: 'palette', compact: true },
+  Homepage: { icon: 'grid', compact: true },
+  Navigation: { icon: 'menu', compact: true },
+  Configuration: { icon: 'sliders', compact: true },
+  Provincial: { icon: 'globe', compact: true },
+  Notifications: { icon: 'bell', compact: true },
+  AI: { icon: 'spark', compact: true },
+  Offline: { icon: 'wifiOff', compact: true },
+  Security: { icon: 'lock', compact: true },
+  Backup: { icon: 'database', compact: true },
+  'Audit register': { icon: 'list', compact: true },
+  Events: { icon: 'calendar', compact: true },
+  Approvals: { icon: 'check', compact: true },
+  Export: { icon: 'upload', compact: true },
 }
 
 function card(title, desc, meta = 'Explore') {
   const tile = CARD_TILES[title]
   const image = tile ? null : imageFor(title)
 
-  const media = tile
-    ? `<div class="card-media tile">${iconSvg(tile.icon, 40)}<span class="tile-label">${escapeHtml(tile.label)}</span></div>`
-    : image
-      ? `<div class="card-media"><img src="${image}" alt="" loading="lazy" decoding="async" /></div>`
-      : ''
+  let media = ''
+  if (tile) {
+    const glyph = iconSvg(tile.icon, tile.compact ? 26 : 40)
+    const label = tile.label ? `<span class="tile-label">${escapeHtml(tile.label)}</span>` : ''
+    media = `<div class="card-media tile${tile.compact ? ' compact' : ''}">${glyph}${label}</div>`
+  } else if (image) {
+    media = `<div class="card-media"><img src="${image}" alt="" loading="lazy" decoding="async" /></div>`
+  }
 
   return `<article class="content-card${media ? ' has-media' : ''}">${media}<div class="card-body"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(desc)}</p>${cardAction(title, meta)}</div></article>`
 }

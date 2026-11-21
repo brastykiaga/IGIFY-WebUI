@@ -482,7 +482,7 @@ These are shortcuts to the relevant workflow. They must not bypass registration 
 - Avoid bright decorative colours and unnecessary visual ornament.
 - Use consistent typography, spacing, borders, cards and interaction states.
 - Keep content and navigation visually distinct.
-- **Card imagery:** content cards (news, learning, media, community) may carry a 16:9 photograph. Administrative and utility cards are text-only — an image there adds weight without meaning. Prototype photographs are real Papua New Guinea images from Wikimedia Commons (CC BY, CC BY-SA or public domain), attributed in the app's Photo credits panel; see `docs/SAMPLE-IMAGES.md`.
+- **Card imagery:** there are no bare text cards. Content cards carry a 16:9 photograph where a suitable one exists. Where none exists — broadcast and audio, and administrative or utility cards — a designed icon tile stands in: a labelled 16:9 tile for media formats, and a shallow 76 px icon band for utility cards so long administrative pages keep their density. Prototype photographs are Papua New Guinea images from Wikimedia Commons (CC BY, CC BY-SA or public domain), attributed in the app's Photo credits panel; see `docs/SAMPLE-IMAGES.md`.
 
 ### 9.2 Five light themes
 

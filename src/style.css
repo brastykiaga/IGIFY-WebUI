@@ -246,6 +246,13 @@ h1 { font-size: 22px; margin: 0 0 6px 0; font-weight: 700; color: var(--text); }
   text-transform: uppercase;
   color: var(--muted);
 }
+/* Utility and administrative cards: a shallow icon band instead of a 16:9
+   photograph, so long admin pages keep their density. */
+.card-media.tile.compact {
+  aspect-ratio: auto;
+  height: 76px;
+}
+.card-media.tile.compact .icon { opacity: 0.7; }
 .card-body { padding: 14px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .card-body h3 { margin: 0 0 4px 0; font-size: 15px; font-weight: 700; }
 .card-body p { margin: 0 0 10px 0; font-size: 12px; color: var(--muted); line-height: 1.4; flex: 1; }
