@@ -9,8 +9,9 @@ A frontend-only demonstration of the four IGIFY user environments — offline-fi
 - **Visible theme controls:** 5 charcoal light themes + Dark Mode (keyboard shortcuts Alt+T / Alt+D still work)
 - **localStorage persistence:** Remembers theme, dark mode, sidebar state, and workspace across visits
 - **Offline/online status banner:** Shows when the device is offline
+- **Collapsible sidebar:** on desktop it collapses to an icon rail with hover/focus labels; on small screens it is an overlay drawer with a backdrop that closes after navigation. The choice is remembered per device.
 - **Working local flows:** Account/profile editing, a notifications inbox with unread badge, and Create shortcuts (user, organisation, content, announcement, group, event) that save drafts and list them on the owning screen
-- **Lightweight:** System font stack (no remote Google Fonts), ~42 KB JavaScript (~10 KB gzipped)
+- **Lightweight:** System font stack (no remote Google Fonts), ~43 KB JavaScript (~10 KB gzipped)
 - **Accessibility:** Focus-visible states, ARIA labels, keyboard navigation, Escape closes dialogs and the sidebar
 - **PWA:** `public/manifest.json` and `public/sw.js`, copied verbatim into `dist/` by Vite
 

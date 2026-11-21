@@ -9,7 +9,8 @@ const defaultState = {
   page: 'Home',
   theme: 'classic',
   dark: false,
-  sidebar: true,
+  sidebar: false,
+  collapsed: false,
   search: '',
   toast: '',
   offline: false,
@@ -1044,7 +1045,7 @@ function render() {
   const nav = e.nav
     .map(
       (n) =>
-        `<button class="nav-link ${state.page === n ? 'active' : ''}" data-page="${escapeHtml(n)}" aria-pressed="${state.page === n}"><span>${icon(n)}</span><label>${escapeHtml(n)}</label></button>`
+        `<button class="nav-link ${state.page === n ? 'active' : ''}" data-page="${escapeHtml(n)}" data-label="${escapeHtml(n)}" aria-pressed="${state.page === n}"><span>${icon(n)}</span><label>${escapeHtml(n)}</label></button>`
     )
     .join('')
 
@@ -1055,8 +1056,26 @@ function render() {
     )
     .join('')
 
+  const wide = window.matchMedia('(min-width: 700px)').matches
+
+  // In the collapsed desktop rail the workspace selector is replaced by an
+  // expand control, because a native select cannot be rendered as an icon.
+  const workspaceControl =
+    wide && state.collapsed
+      ? '<button class="rail-btn" data-action="expand-sidebar" title="Change workspace" aria-label="Change workspace">▦</button>'
+      : [
+          '<div class="env-label">WORKSPACE</div>',
+          '<select id="environment" aria-label="Choose workspace">',
+          `<option value="public" ${state.env === 'public' ? 'selected' : ''}>Public WebUI</option>`,
+          `<option value="member" ${state.env === 'member' ? 'selected' : ''}>Registered Member</option>`,
+          `<option value="org" ${state.env === 'org' ? 'selected' : ''}>Organisation Admin</option>`,
+          `<option value="admin" ${state.env === 'admin' ? 'selected' : ''}>IGIFY Administrator</option>`,
+          '</select>',
+        ].join('')
+
   document.querySelector('#app').innerHTML = `
-    <div class="app-shell ${state.sidebar ? '' : 'sidebar-hidden'}">
+    <div class="app-shell ${state.sidebar ? '' : 'sidebar-hidden'} ${wide && state.collapsed ? 'sidebar-collapsed' : ''}">
+      ${!wide && state.sidebar ? '<div class="drawer-backdrop" data-action="sidebar" aria-hidden="true"></div>' : ''}
       <aside class="sidebar" aria-label="Workspace navigation">
         <div class="brand">
           <div class="brand-mark">i</div>
@@ -1065,13 +1084,7 @@ function render() {
             <small>Discover. Learn. Connect.</small>
           </div>
         </div>
-        <div class="env-label">WORKSPACE</div>
-        <select id="environment" aria-label="Choose workspace">
-          <option value="public" ${state.env === 'public' ? 'selected' : ''}>Public WebUI</option>
-          <option value="member" ${state.env === 'member' ? 'selected' : ''}>Registered Member</option>
-          <option value="org" ${state.env === 'org' ? 'selected' : ''}>Organisation Admin</option>
-          <option value="admin" ${state.env === 'admin' ? 'selected' : ''}>IGIFY Administrator</option>
-        </select>
+        ${workspaceControl}
         <nav>${nav}</nav>
         <div class="sidebar-bottom">
           <span class="status-dot ${state.offline ? '' : 'online'}"></span>
@@ -1081,7 +1094,7 @@ function render() {
       <main class="main">
         ${state.offline ? '<div class="offline-banner show">● Offline — content served from local cache</div>' : ''}
         <header class="topbar">
-          <button class="icon-btn menu-btn" data-action="sidebar" aria-label="Toggle sidebar">☰</button>
+          <button class="icon-btn menu-btn" data-action="sidebar" aria-label="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Toggle navigation'}" title="${wide ? (state.collapsed ? 'Expand sidebar' : 'Collapse sidebar') : 'Menu'}">☰</button>
           <div class="breadcrumb">${escapeHtml(e.label)} <span>/</span> ${escapeHtml(state.page)}</div>
           <div class="top-actions">
             <div class="search" role="search" aria-label="Search IGIFY">
@@ -1120,16 +1133,21 @@ function render() {
   // ── Event listeners ─────────────────────────────────────────────
 
   const envSelect = document.querySelector('#environment')
-  envSelect.addEventListener('change', (ev) => {
-    state.env = ev.target.value
-    state.page = environments[state.env].nav[0]
-    saveState()
-    render()
-  })
+  if (envSelect) {
+    envSelect.addEventListener('change', (ev) => {
+      state.env = ev.target.value
+      state.page = environments[state.env].nav[0]
+      if (!window.matchMedia('(min-width: 700px)').matches) state.sidebar = false
+      saveState()
+      render()
+    })
+  }
 
   document.querySelectorAll('[data-page]').forEach((b) => {
     b.addEventListener('click', () => {
       state.page = b.dataset.page
+      // On small screens the drawer should close once a destination is chosen.
+      if (!window.matchMedia('(min-width: 700px)').matches) state.sidebar = false
       saveState()
       render()
     })
@@ -1139,7 +1157,15 @@ function render() {
     b.addEventListener('click', (ev) => {
       const a = b.dataset.action
       if (a === 'sidebar') {
-        state.sidebar = !state.sidebar
+        if (window.matchMedia('(min-width: 700px)').matches) {
+          state.collapsed = !state.collapsed
+        } else {
+          state.sidebar = !state.sidebar
+        }
+        saveState()
+        render()
+      } else if (a === 'expand-sidebar') {
+        state.collapsed = false
         saveState()
         render()
       } else if (a === 'create') {
@@ -1269,7 +1295,7 @@ document.addEventListener('keydown', (e) => {
       closeModal()
       return
     }
-    state.sidebar = true
+    state.sidebar = false
     saveState()
     render()
   }

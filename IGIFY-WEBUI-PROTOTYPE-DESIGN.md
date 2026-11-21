@@ -688,8 +688,9 @@ This section deliberately distinguishes what has been demonstrated from what rem
 - **v1.1 — Mobile-first styling:** the stylesheet is authored for small screens first, with layout changes at 700 px and 1024 px. The sidebar becomes a drawer on small screens; touch targets and focus states are defined.
 - **v1.1 — Visible theme controls:** the five charcoal light themes and Dark Mode are selectable from the Administrator *Appearance & Interface* screen as well as the sidebar. The Alt+T and Alt+D shortcuts remain as accelerators.
 - **v1.1 — Persistence:** workspace, page, theme, Dark Mode and sidebar state are stored in `localStorage` and restored on reload.
+- **v1.1 — Sidebar:** on desktop the sidebar collapses to an icon-only rail; labels appear on hover and keyboard focus, and the collapsed preference is remembered. On small screens it behaves as an overlay drawer with a backdrop and closes after a destination is chosen.
 - **v1.1 — Local flows:** profile editing, notifications and the Create shortcuts are functional against on-device storage (see §14.1).
-- **v1.1 — Build size:** production output is approximately 42 kB of JavaScript (10 kB gzipped) and 12 kB of CSS (3 kB gzipped), with no remote font or stylesheet dependency.
+- **v1.1 — Build size:** production output is approximately 43 kB of JavaScript (10 kB gzipped) and 14 kB of CSS (3.5 kB gzipped), with no remote font or stylesheet dependency.
 
 ### 14.1 Local prototype interactions
 
@@ -728,7 +729,6 @@ These interactions are real interactions with local, on-device data. They are **
 - Search is not connected to Migle; submitting a search only reports that the service is not connected.
 - Radio, TV, music and video playback are not connected.
 - Notifications and messaging are local-only; no messaging service is connected.
-- The desktop sidebar can be hidden on small screens but does not yet offer a collapsed icon-only mode on desktop.
 - Organisation Admin does not yet have its own separate theme; it currently shares the selected light theme.
 - The PWA manifest declares no icons, so install prompts use browser defaults.
 - Interface state is not reflected in the URL, so there are no deep links; a reload restores the last view from `localStorage`.
@@ -744,7 +744,7 @@ Checked items are satisfied by the current prototype. Unticked items remain open
 ### Application shell
 - [x] Four workspaces are present and visually distinct.
 - [x] Workspace selector changes the complete workspace content and navigation.
-- [ ] Desktop sidebar expands/collapses correctly.
+- [x] Desktop sidebar expands/collapses correctly.
 - [x] Mobile navigation is usable and responsive.
 - [x] Search, notifications and profile controls have clear behaviour.
 - [x] Active navigation and breadcrumb are correct.

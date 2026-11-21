@@ -422,16 +422,91 @@ textarea.field { resize: vertical; font-family: inherit; }
 }
 .offline-banner.show { display: flex; }
 
+/* Compact control shown in the collapsed desktop rail instead of the workspace select */
+.rail-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; margin-bottom: 18px; padding: 9px 0;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sidebarText);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+  font-size: 16px;
+}
+.rail-btn:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* Mobile drawer: the sidebar is an overlay, not part of the flow */
+@media (max-width: 699px) {
+  .sidebar {
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    width: min(285px, 85vw);
+    z-index: 60;
+    overflow-y: auto;
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.25);
+  }
+  .main { width: 100%; }
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 28, 0.45);
+  z-index: 55;
+}
+@media (min-width: 700px) {
+  .drawer-backdrop { display: none; }
+}
+
 /* Desktop layout */
 @media (min-width: 700px) {
   .app-shell { flex-direction: row; }
   .main { flex-direction: column; }
   .sidebar-hidden .sidebar { transform: none; visibility: visible; }
-  .menu-btn { display: none; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .page-wrap { padding: 28px 24px; }
   .topbar { padding: 0 24px; }
+
+  /* Collapsed rail: icons only, labels on hover/focus */
+  .sidebar-collapsed .sidebar {
+    width: 68px;
+    padding: 20px 8px 16px;
+    position: relative;
+    z-index: 20;
+  }
+  .sidebar-collapsed .brand { justify-content: center; padding: 0 0 18px; }
+  .sidebar-collapsed .brand > div:last-child { display: none; }
+  .sidebar-collapsed .env-label,
+  .sidebar-collapsed .sidebar select,
+  .sidebar-collapsed .sidebar-bottom,
+  .sidebar-collapsed .nav-link label { display: none; }
+
+  .sidebar-collapsed .nav-link {
+    position: relative;
+    justify-content: center;
+    padding: 11px 0;
+  }
+  .sidebar-collapsed .nav-link span { width: auto; font-size: 18px; }
+
+  .sidebar-collapsed .nav-link:hover::after,
+  .sidebar-collapsed .nav-link:focus-visible::after {
+    content: attr(data-label);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--text);
+    color: var(--surface);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: var(--shadow);
+    z-index: 30;
+    pointer-events: none;
+  }
 }
 
 /* Larger desktop */
